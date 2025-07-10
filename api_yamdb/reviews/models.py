@@ -1,39 +1,51 @@
-from datetime import datetime
-
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.utils import timezone
 
 
-class Category(models.Model):
-    """Модель объекта категории произведения."""
+def check_length(string, max_length=30):
+    """
+    Метод проверки длины строки.
+    Если строка длиннее допустимого, возвращает фрагмент строки + '...'.
+    """
+    return string[:max_length] + '...' if len(string) > max_length else string
+
+
+class AttributeModel(models.Model):
+    """Абстрактная модель свойства объекта."""
 
     name = models.CharField('Название', max_length=256)
     slug = models.SlugField('Слаг', unique=True)
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return check_length(self.name)
+
+
+class Category(AttributeModel):
+    """Модель объекта категории произведения."""
 
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
-    def __str__(self):
-        return self.name
 
-
-class Genre(models.Model):
+class Genre(AttributeModel):
     """Модель объекта категории произведения."""
-
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True)
 
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
-    def __str__(self):
-        return self.name
-
 
 class Title(models.Model):
-    """Модель объекта произведения."""
+    """
+    Модель объекта произведения (фильма, книги и т.п.).
+    Объект модели может иметь несколько жанров и только одну категорию.
+    Нельзя добавить произведение с годом выпуска в будущем.
+    """
 
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField('Год выпуска')
@@ -45,18 +57,19 @@ class Title(models.Model):
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
+        null=True,
         related_name='titles',
         verbose_name='Категория')
 
     class Meta:
-        constraints = [
-            CheckConstraint(
-                check=Q(year__lte=datetime.now().year),
-                name='year_now_or_earlier'
-            )
-        ]
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        return self.name
+        return check_length(self.name)
+
+    def clean(self):
+        if self.year > timezone.now().year:
+            raise ValidationError(
+                'Год выпуска произведения не может быть больше текущего!'
+            )
