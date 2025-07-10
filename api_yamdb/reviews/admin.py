@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import Category, Genre, Title
+from . import models
 
 
-class AttributeAdmin(admin.ModelAdmin):
+class DivisionAttributeAdmin(admin.ModelAdmin):
     """
     Общий класс для для настройки админ-зоны
     модели-свойства объекта (внешнего ключа).
@@ -13,19 +13,19 @@ class AttributeAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-@admin.register(Category)
-class CategoryAdmin(AttributeAdmin):
+@admin.register(models.Category)
+class CategoryAdmin(DivisionAttributeAdmin):
     """Настройка админ-зоны для модели Category."""
     pass
 
 
-@admin.register(Genre)
-class GenreAdmin(AttributeAdmin):
+@admin.register(models.Genre)
+class GenreAdmin(DivisionAttributeAdmin):
     """Настройка админ-зоны для модели Genre."""
     pass
 
 
-@admin.register(Title)
+@admin.register(models.Title)
 class TitleAdmin(admin.ModelAdmin):
     """Настройка админ-зоны для модели Title."""
 

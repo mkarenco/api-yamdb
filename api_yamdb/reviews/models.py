@@ -3,16 +3,12 @@ from django.db import models
 from django.utils import timezone
 
 
-def check_length(string, max_length=30):
+class DivisionAttributeModel(models.Model):
     """
-    Метод проверки длины строки.
-    Если строка длиннее допустимого, возвращает фрагмент строки + '...'.
+    Абстрактная модель свойства объекта.
+    Содержит поля имени признака деления на группы и уникальный слаг.
+    Описывает строковое отображение объекта.
     """
-    return string[:max_length] + '...' if len(string) > max_length else string
-
-
-class AttributeModel(models.Model):
-    """Абстрактная модель свойства объекта."""
 
     name = models.CharField('Название', max_length=256)
     slug = models.SlugField('Слаг', unique=True)
@@ -21,10 +17,10 @@ class AttributeModel(models.Model):
         abstract = True
 
     def __str__(self):
-        return check_length(self.name)
+        return self.name[:50]
 
 
-class Category(AttributeModel):
+class Category(DivisionAttributeModel):
     """Модель объекта категории произведения."""
 
     class Meta:
@@ -32,7 +28,7 @@ class Category(AttributeModel):
         verbose_name_plural = 'Категории'
 
 
-class Genre(AttributeModel):
+class Genre(DivisionAttributeModel):
     """Модель объекта категории произведения."""
 
     class Meta:
@@ -66,7 +62,7 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        return check_length(self.name)
+        return self.name[:50]
 
     def clean(self):
         if self.year > timezone.now().year:
