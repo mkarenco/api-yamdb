@@ -29,7 +29,7 @@ class GenreAdmin(DivisionAttributeAdmin):
 class TitleAdmin(admin.ModelAdmin):
     """Настройка админ-зоны для модели Title."""
 
-    list_display = ('name', 'year', 'description', 'category')
+    list_display = ('name', 'year', 'description', 'category', 'rating')
     search_fields = ('name', 'description')
     list_filter = ('year', 'category')
     empty_value_display = '-пусто-'
