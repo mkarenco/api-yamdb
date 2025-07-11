@@ -6,8 +6,14 @@ from .serializers import UserSerializer
 
 
 class RegisterUserViewSet(viewsets.ModelViewSet):
+    """
+    Эндпоинт для регистрации и аутентификации пользователей
+    """
     pass
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """
+    API эндпоинт позволяющий пользователям просматривать или редактировать
+    """
     pass
