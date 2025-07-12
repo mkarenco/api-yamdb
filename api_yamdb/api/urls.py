@@ -4,7 +4,22 @@ from rest_framework.routers import DefaultRouter
 
 from . import views
 
-router_v1 = DefaultRouter()
+
+router_v1 = routers.DefaultRouter()
+router_v1.register(
+    'titles',
+    views.TitleViewSet,
+    basename='title'
+)
+router_v1.register(
+    'categories',
+    views.CategoryViewSet,
+    basename='category'
+)
+router_v1.register(
+    'genres',
+    views.GenreViewSet,
+    basename='genre'
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',  # Ищет title по ID
     views.ReviewsViewSet,
