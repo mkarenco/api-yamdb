@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django_filters',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
+    'users.apps.UsersConfig',
     'rest_framework.authtoken',
 ]
 MIDDLEWARE = [
@@ -125,3 +126,4 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'

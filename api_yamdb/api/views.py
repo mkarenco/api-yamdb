@@ -56,23 +56,6 @@ class GenreViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
     lookup_field = 'slug'
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
-
-class RegisterUserViewSet(viewsets.ModelViewSet):
-    """
-    Эндпоинт для регистрации и аутентификации пользователей
-    """
-    pass
-
-
-class UsersViewSet(viewsets.ModelViewSet):
-    """
-    API эндпоинт позволяющий пользователям просматривать или редактировать
-    """
-    pass
-
-# Все что выше перенести в приложение users
-
-
 from rest_framework import permissions, pagination, viewsets
 from django.shortcuts import get_object_or_404
 
