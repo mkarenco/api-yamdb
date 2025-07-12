@@ -13,8 +13,12 @@ ROLE_CHOICES = [
 
 class CustomUser(AbstractUser):
     """
-    Модель пользователя с дополнительными полями для обработки логики
-    определения ролей (прав) и возможности верификации по email
+    Модель пользователя с дополнительными полями:
+    bio - биография
+    role - роль пользователя
+    confirmation_code - поле для сохранения кода подтверждения.
+    Переопределены стандартные поля user_group user_permission,
+    для избежания конфликтов
     """
     bio = models.TextField(
         'Биография',
@@ -40,7 +44,7 @@ class CustomUser(AbstractUser):
          Group,
          verbose_name='Группы',
          blank=True,
-         related_name='customuser_set',
+         related_name='custom_users',
          related_query_name='user',
          help_text='Группы к которым принадлежит пользователь'
     )
@@ -48,7 +52,7 @@ class CustomUser(AbstractUser):
         Permission,
         verbose_name='Права пользователя',
         blank=True,
-        related_name='customuser_set',
+        related_name='custom_users',
         related_query_name='user',
         help_text='Специальные права для пользователя'
     )

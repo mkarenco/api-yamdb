@@ -36,26 +36,15 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        lookup_field = self.kwargs['lookup_field']
-        if lookup_field == 'me':
-            if self.request.user.is_authenticated:
-                return self.request.user
-            else:
-                raise permissions.exceptions.NotAuthenticated(
-                    'Аутентификация не предоставлена'
-                )
+        """
+        Возвращает аутентифицированного пользователя по эндпоинту me/
+        В остальных случает обычный объект пользователя username
+        """
+        lookup_value = self.kwargs.get(self.lookup_field)
+        if lookup_value == 'me':
+            return self.request.user
         return super().get_object()
 
     def get_permissions(self):
-        if (self.action in ['retrieve', 'update', 'partial_update'] and
-                self.kwargs.get(self.lookup_field) == 'me'):
-            return [permissions.IsAuthenticated()]
-
-        if self.action == 'list':
-            return [permissions.IsAuthenticated()]
-
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated()]
-
         return [permissions.IsAuthenticated()]
 

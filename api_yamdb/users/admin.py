@@ -3,4 +3,9 @@ from django.contrib.auth.admin import UserAdmin
 
 from . import models
 
-admin.site.register(models.CustomUser, UserAdmin)
+@admin.register(models.CustomUser)
+class CustomUserAdmin(UserAdmin):
+    """
+    Настройка админки пользователя
+    """
+    pass
