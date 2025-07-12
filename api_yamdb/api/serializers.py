@@ -7,10 +7,8 @@ from reviews import models
 class TitleSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели Title.
-    В поле genre обрабатывается список слагов жанров произведения.
-    В поле category используется имя категории при отображении.
-    Прописан метод валидации поля year: год выпуска произведения
-    не позже текущего.
+    Позволяет создавать и отображать произведения,
+    указывая жанры (по слагам) и категорию (по имени).
     """
 
     genre = serializers.ListField(
@@ -35,7 +33,10 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Category."""
+    """
+    Сериализатор для модели Category.
+    Позволяет создавать и отображать категории произведений.
+    """
 
     class Meta:
         model = models.Category
@@ -43,7 +44,10 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Genre."""
+    """
+    Сериализатор для модели Genre.
+    Позволяет создавать и отображать жанры произведений.
+    """
 
     class Meta:
         model = models.Genre
