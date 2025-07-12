@@ -1,30 +1,36 @@
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .serializers import UserSerializer, RegisterUserSerializer
 
 User = get_user_model()
 
 
-class RegisterUserViewSet(viewsets.GenericViewSet):
+class RegisterUserViewSet(APIView):
     """
-    Вьюсет для запроса кода подтверждения при регистрации.
+    Вьюсет для регистрации нового пользователя.
+    Принимает POST-запрос с данными:
+        email (обязательно)
+        username (обязательно)
+        password (обязательно)
+
     Обрабатывает POST-запрос на 'auth/signup/'.
     """
     serializer_class = RegisterUserSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = (permissions.AllowAny,)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        user = serializer.save()
+        serializer.save()
 
         return Response(
-            {'message': 'Код подтверждения отправлен на вашу почту.'},
+            'Код подтверждения отправлен на вашу почту.',
             status=status.HTTP_200_OK
         )
+
 
 class UsersViewSet(viewsets.ModelViewSet):
     """
@@ -47,4 +53,3 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         return [permissions.IsAuthenticated()]
-

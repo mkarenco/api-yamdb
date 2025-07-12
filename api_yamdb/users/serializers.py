@@ -1,20 +1,22 @@
-import secrets
 from sqlite3 import IntegrityError
 
-from django.core.mail import send_mail
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from api_yamdb import settings
 from . import models
-from .models import CustomUser
+from .logic import _assign_confirmation_code, _send_confirmation_email
 
 
 class UserSerializer(serializers.ModelSerializer):
     """
     Сериализатор для модели CustomUser.
-    Используется для вывода списка пользователей
-    и детальной информации о пользователе.
+
+    Проводит валидацию данных при создании и обновлении
+    Контроль прав на изменение роли пользователя
+    Поле role доступно только для чтения (всем кроме staff)
+
+    выводит список пользователей, просмотр профиля и
+    обновление данных пользователя
     """
 
     class Meta:
@@ -23,7 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('role',)
 
     def update(self, instance, validated_data):
-        if not self.context['request'].user.is_staff and 'role' in validated_data:
+        if not (self.context['request'].user.is_staff
+                and 'role' in validated_data):
             raise serializers.ValidationError(
                 'У вас недостаточно прав для изменения роли.'
             )
@@ -54,10 +57,10 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         """
         Проверка email на наличие в базе
         """
-        email = serializers.EmailField(
+        serializers.EmailField(
             validators=[
                 UniqueValidator(
-                    queryset=CustomUser.objects.all(),
+                    queryset=models.CustomUser.objects.all(),
                     message='Пользователь с таким email уже существует'
                 )
             ]
@@ -72,7 +75,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         email = validated_data['email']
 
         try:
-            user, created = CustomUser.objects.get_or_create(
+            user, created = models.CustomUser.objects.get_or_create(
                 username=username,
                 defaults={'email': email, 'is_active': False}
             )
@@ -90,27 +93,13 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Пользователь с таким username или email уже существует.'
             )
-        confirmation_code = self._assign_confirmation_code()
+        confirmation_code = _assign_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
 
         try:
-           self._send_confirmation_email(user.email, user.confirmation_code)
+            _send_confirmation_email(user.email, user.confirmation_code)
         except Exception as e:
             raise serializers.ValidationError(f'Ошибка отправки письма: {e}')
 
         return user
-
-    @staticmethod
-    def _assign_confirmation_code():
-        return ''.join(secrets.choice('0123456789ABCDEFG') for _ in range(6))
-
-    @staticmethod
-    def _send_confirmation_email(email, confirmation_code):
-        send_mail(
-            'Код подтверждения для регистрации',
-            f'Ваш код подтверждения: {confirmation_code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )

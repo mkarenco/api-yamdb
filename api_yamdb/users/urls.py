@@ -20,7 +20,7 @@ urlpatterns = [
     ),
     path(
         'auth/signup/',
-        views.RegisterUserViewSet.as_view({'post': 'create'}),
+        views.RegisterUserViewSet.as_view(),
         name='register'
     ),
     path('', include(router_v1.urls)),
