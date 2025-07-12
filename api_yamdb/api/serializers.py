@@ -1,10 +1,17 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from reviews import models
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Title."""
+    """
+    Сериализатор для модели Title.
+    В поле genre обрабатывается список слагов жанров произведения.
+    В поле category используется имя категории при отображении.
+    Прописан метод валидации поля year: год выпуска произведения
+    не позже текущего.
+    """
 
     genre = serializers.ListField(
         child=serializers.SlugField(),
@@ -17,9 +24,14 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Title
-        fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category', 'rating'
-        )
+        fields = '__all__'
+
+    def validate_year(self, value):
+        if value > timezone.now().year:
+            raise serializers.ValidationError(
+                'Нельзя добавить произведение с годом выпуска больше текущего!'
+            )
+        return value
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -27,7 +39,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Category
-        fields = ('id', 'name', 'slug')
+        fields = '__all__'
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -35,4 +47,4 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Genre
-        fields = ('id', 'name', 'slug')
+        fields = '__all__'
