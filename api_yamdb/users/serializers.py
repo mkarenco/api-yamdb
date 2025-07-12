@@ -3,6 +3,7 @@ from sqlite3 import IntegrityError
 
 from django.core.mail import send_mail
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from api_yamdb import settings
 from . import models
@@ -23,9 +24,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if not self.context['request'].user.is_staff and 'role' in validated_data:
-            raise serializers.ValidationError({
-                'role': 'У вас недостаточно прав для изменения роли.'
-            })
+            raise serializers.ValidationError(
+                'У вас недостаточно прав для изменения роли.'
+            )
         return super().update(instance, validated_data)
 
 
@@ -53,15 +54,19 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         """
         Проверка email на наличие в базе
         """
-        if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует'
-            )
+        email = serializers.EmailField(
+            validators=[
+                UniqueValidator(
+                    queryset=CustomUser.objects.all(),
+                    message='Пользователь с таким email уже существует'
+                )
+            ]
+        )
         return value
 
     def create(self, validated_data):
         """
-
+        Создание пользователя с не активированным состоянием по-умолчанию
         """
         username = validated_data['username']
         email = validated_data['email']
@@ -79,25 +84,33 @@ class RegisterUserSerializer(serializers.ModelSerializer):
                     )
                 if user.is_active:
                     raise serializers.ValidationError(
-                        "Пользователь уже активен."
+                        'Пользователь уже активен.'
                     )
         except IntegrityError:
             raise serializers.ValidationError(
                 'Пользователь с таким username или email уже существует.'
             )
-        confirmation_code = ''.join(secrets.choice('0123456789ABCDEFG')
-                                    for _ in range(6))
+        confirmation_code = self._assign_confirmation_code()
         user.confirmation_code = confirmation_code
+        user.save()
 
         try:
-            send_mail(
-                'Код подтверждения для регистрации',
-                f'Ваш код подтверждения: {confirmation_code}',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
+           self._send_confirmation_email(user.email, user.confirmation_code)
         except Exception as e:
-            raise serializers.ValidationError(f"Ошибка отправки письма: {e}")
+            raise serializers.ValidationError(f'Ошибка отправки письма: {e}')
 
         return user
+
+    @staticmethod
+    def _assign_confirmation_code():
+        return ''.join(secrets.choice('0123456789ABCDEFG') for _ in range(6))
+
+    @staticmethod
+    def _send_confirmation_email(email, confirmation_code):
+        send_mail(
+            'Код подтверждения для регистрации',
+            f'Ваш код подтверждения: {confirmation_code}',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )

@@ -7,7 +7,7 @@ from . import views
 router_v1 = DefaultRouter()
 
 router_v1.register(
-    r'users',
+    'users',
     views.UsersViewSet,
     basename='users'
 )

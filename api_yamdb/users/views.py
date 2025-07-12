@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
-from rest_framework import permissions
 
 from .serializers import UserSerializer, RegisterUserSerializer
 
 User = get_user_model()
+
 
 class RegisterUserViewSet(viewsets.GenericViewSet):
     """
@@ -22,7 +22,7 @@ class RegisterUserViewSet(viewsets.GenericViewSet):
         user = serializer.save()
 
         return Response(
-            {"message": "Код подтверждения отправлен на вашу почту."},
+            {'message': 'Код подтверждения отправлен на вашу почту.'},
             status=status.HTTP_200_OK
         )
 
@@ -36,7 +36,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        lookup_field = self.kwargs.get('lookup_field')
+        lookup_field = self.kwargs['lookup_field']
         if lookup_field == 'me':
             if self.request.user.is_authenticated:
                 return self.request.user
