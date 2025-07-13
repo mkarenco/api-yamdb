@@ -9,15 +9,18 @@ from .logic import _assign_confirmation_code, _send_confirmation_email
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели CustomUser.
-
-    Проводит валидацию данных при создании и обновлении
-    Контроль прав на изменение роли пользователя
-    Поле role доступно только для чтения (всем кроме staff)
-
     выводит список пользователей, просмотр профиля и
     обновление данных пользователя
     """
+
+    email = serializers.EmailField(
+        validators=[
+            UniqueValidator(
+                queryset=models.CustomUser.objects.all(),
+                message='Пользователь с таким email уже существует'
+            )
+        ]
+    )
 
     class Meta:
         model = models.CustomUser
@@ -25,8 +28,10 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('role',)
 
     def update(self, instance, validated_data):
-        if not (self.context['request'].user.is_staff
-                and 'role' in validated_data):
+        if not (
+            self.context['request'].user.is_staff
+            and 'role' in validated_data
+        ):
             raise serializers.ValidationError(
                 'У вас недостаточно прав для изменения роли.'
             )
@@ -38,6 +43,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     Сериализатор для запроса кода подтверждения при регистрации.
     Принимает email и username.
     """
+
     class Meta:
         model = models.CustomUser
         fields = ('username', 'email',)
@@ -53,37 +59,22 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate_email(self, value):
-        """
-        Проверка email на наличие в базе
-        """
-        serializers.EmailField(
-            validators=[
-                UniqueValidator(
-                    queryset=models.CustomUser.objects.all(),
-                    message='Пользователь с таким email уже существует'
-                )
-            ]
-        )
-        return value
-
     def create(self, validated_data):
         """
-        Создание пользователя с не активированным состоянием по-умолчанию
+        Создание пользователя с неактивным состоянием по умолчанию.
         """
-        username = validated_data['username']
-        email = validated_data['email']
 
+        email = validated_data['email']
         try:
             user, created = models.CustomUser.objects.get_or_create(
-                username=username,
+                username=validated_data['username'],
                 defaults={'email': email, 'is_active': False}
             )
             if not created:
                 if user.email != email:
                     raise serializers.ValidationError(
-                        'Пользователь с таким username уже существует'
-                        ' и имеет другой email'
+                        'Пользователь с таким username уже существует '
+                        'и имеет другой email.'
                     )
                 if user.is_active:
                     raise serializers.ValidationError(
@@ -96,10 +87,10 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         confirmation_code = _assign_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
-
         try:
             _send_confirmation_email(user.email, user.confirmation_code)
         except Exception as e:
-            raise serializers.ValidationError(f'Ошибка отправки письма: {e}')
-
+            raise serializers.ValidationError(
+                f'Ошибка отправки письма: {e}'
+            )
         return user

@@ -4,12 +4,10 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
 from reviews import models
-from reviews.models import Reviews
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели Title.
     Позволяет создавать и отображать произведения,
     указывая жанры (по слагам) и категорию (по имени).
     """
@@ -37,7 +35,6 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели Category.
     Позволяет создавать и отображать категории произведений.
     """
 
@@ -48,7 +45,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     """
-    Сериализатор для модели Genre.
     Позволяет создавать и отображать жанры произведений.
     """
 
@@ -66,11 +62,11 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Reviews
+        model = models.Reviews
         read_only_fields = ('title',)
         validators = [
             UniqueTogetherValidator(
-                queryset=Reviews.objects.all(),
+                queryset=models.Reviews.objects.all(),
                 fields=['author', 'title'],
                 message='Вы уже оставили отзыв на это произведение.'
             )

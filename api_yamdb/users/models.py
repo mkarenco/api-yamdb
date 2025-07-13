@@ -20,6 +20,7 @@ class CustomUser(AbstractUser):
     - role — роль пользователя (пользователь, модератор, администратор)
     - confirmation_code — код подтверждения для регистрации/входа
     """
+
     bio = models.TextField(
         'Биография',
         blank=True,
@@ -41,12 +42,12 @@ class CustomUser(AbstractUser):
         help_text='Код подтверждения для регистрации или авторизации'
     )
     groups = models.ManyToManyField(
-         Group,
-         verbose_name='Группы',
-         blank=True,
-         related_name='custom_users',
-         related_query_name='user',
-         help_text='Группы к которым принадлежит пользователь'
+        Group,
+        verbose_name='Группы',
+        blank=True,
+        related_name='custom_users',
+        related_query_name='user',
+        help_text='Группы к которым принадлежит пользователь'
     )
     user_permissions = models.ManyToManyField(
         Permission,
