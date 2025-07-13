@@ -1,8 +1,11 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, pagination, permissions, viewsets
+from rest_framework import filters, pagination, permissions, viewsets
+
 from reviews import models
 
 from . import custom_permissions, serializers
+from .utils import update_rating
+from .viewsets import ListCreateDeleteViewSet
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -21,12 +24,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class CategoryViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
+class CategoryViewSet(ListCreateDeleteViewSet):
     """
     (GET, POST и DELETE):
     Создание и удаление категории, получение списка всех категорий.
@@ -43,12 +41,7 @@ class CategoryViewSet(
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class GenreViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
+class GenreViewSet(ListCreateDeleteViewSet):
     """
     (GET, POST и DELETE):
     Создание и удаление жанра, получение списка всех жанров.
@@ -88,3 +81,12 @@ class ReviewsViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             title=self.get_title()
         )
+        update_rating(self.get_title())
+
+    def perform_update(self, serializer):
+        serializer.save()
+        update_rating(self.get_title())
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        update_rating(self.get_title())
