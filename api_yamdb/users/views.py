@@ -1,23 +1,18 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status, permissions
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import permissions, status, viewsets, views, response
 
-from .serializers import UserSerializer, RegisterUserSerializer
+from .serializers import RegisterUserSerializer, UserSerializer
 
 User = get_user_model()
 
 
-class RegisterUserViewSet(APIView):
+class RegisterUserViewSet(views.APIView):
     """
     Вьюсет для регистрации нового пользователя.
     Принимает POST-запрос с данными:
-        email (обязательно)
-        username (обязательно)
-        password (обязательно)
-
-    Обрабатывает POST-запрос на 'auth/signup/'.
+    (email, username, password).
     """
+
     serializer_class = RegisterUserSerializer
     permission_classes = (permissions.AllowAny,)
 
@@ -25,8 +20,7 @@ class RegisterUserViewSet(APIView):
         serializer = RegisterUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
-        return Response(
+        return response.Response(
             'Код подтверждения отправлен на вашу почту.',
             status=status.HTTP_200_OK
         )
@@ -34,22 +28,19 @@ class RegisterUserViewSet(APIView):
 
 class UsersViewSet(viewsets.ModelViewSet):
     """
-    API эндпоинт позволяющий пользователям просматривать или редактировать
-    профиль пользователя.
+    API-эндпоинт для просмотра или редактирования профиля пользователя.
     """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'username'
 
     def get_object(self):
         """
         Возвращает аутентифицированного пользователя по эндпоинту me/
         В остальных случает обычный объект пользователя username
         """
-        lookup_value = self.kwargs.get(self.lookup_field)
-        if lookup_value == 'me':
+        if self.kwargs.get(self.lookup_field) == 'me':
             return self.request.user
         return super().get_object()
-
-    def get_permissions(self):
-        return [permissions.IsAuthenticated()]

@@ -1,6 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 User = get_user_model()
@@ -8,9 +8,8 @@ User = get_user_model()
 
 class DivisionAttributeModel(models.Model):
     """
-    Абстрактная модель свойства объекта.
-    Содержит поля имени признака деления на группы и уникальный слаг.
-    Описывает строковое отображение объекта.
+    Абстрактная модель.
+    Содержит поля: имени и уникальный слаг.
     """
 
     name = models.CharField('Название', max_length=256)
@@ -32,7 +31,7 @@ class Category(DivisionAttributeModel):
 
 
 class Genre(DivisionAttributeModel):
-    """Модель объекта категории произведения."""
+    """Модель объекта жанра произведения."""
 
     class Meta:
         verbose_name = 'Жанр'
@@ -44,23 +43,29 @@ class Title(models.Model):
     Модель объекта произведения (фильма, книги и т.п.).
     Объект модели может иметь несколько жанров и только одну категорию.
     Нельзя добавить произведение с годом выпуска в будущем.
-    К проиведнию моно написать обзор (комментарий).
+    К проиведнию можно написать обзор (комментарий).
     """
 
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField('Год выпуска')
-    description = models.TextField('Описание', blank=True, null=True)
+    description = models.TextField(
+        'Описание',
+        blank=True,
+        null=True
+    )
     rating = models.IntegerField('Рейтинг', default=None)
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
-        verbose_name='Жанр')
+        verbose_name='Жанр'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
         related_name='titles',
-        verbose_name='Категория')
+        verbose_name='Категория'
+    )
 
     class Meta:
         verbose_name = 'Произведение'
@@ -79,13 +84,19 @@ class Title(models.Model):
 class Reviews(models.Model):
     """
     Модель обзора к произведению (Модели Title).
-    Содержит автора, текст, ссылку на тайтл и дату создания.
+    Содержит автора, ссылку на произведение, текст, и дату создания.
     """
 
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews')
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews')
+        Title,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
     text = models.TextField()
     created = models.DateTimeField('Дата добавления', auto_now_add=True)
 

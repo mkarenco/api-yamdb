@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 
-router_v1 = routers.DefaultRouter()
+router_v1 = DefaultRouter()
 router_v1.register(
     'titles',
     views.TitleViewSet,
@@ -19,6 +19,7 @@ router_v1.register(
     'genres',
     views.GenreViewSet,
     basename='genre'
+)
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',  # Ищет title по ID
     views.ReviewsViewSet,
@@ -26,8 +27,7 @@ router_v1.register(
 )
 
 urlpatterns = [
-    path(
-        'v1/',
-        include(router_v1.urls)
-    ),
+    path('v1/auth/', include('users.urls')),
+    path('v1/users/', include('users.urls')),
+    path('v1/', include(router_v1.urls)),
 ]
