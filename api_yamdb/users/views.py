@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import permissions, status, viewsets, views, response
+from rest_framework import permissions, response, status, views, viewsets
 
 from .serializers import RegisterUserSerializer, UserSerializer
 

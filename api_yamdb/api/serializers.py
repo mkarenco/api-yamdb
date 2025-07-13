@@ -12,9 +12,10 @@ class TitleSerializer(serializers.ModelSerializer):
     указывая жанры (по слагам) и категорию (по имени).
     """
 
-    genre = serializers.ListField(
-        child=serializers.SlugField(),
-        allow_empty=False
+    genre = serializers.SlugRelatedField(
+        queryset=models.Genre.objects.all(),
+        slug_field='slug',
+        many=True
     )
     category = serializers.SlugRelatedField(
         slug_field='name',
@@ -24,6 +25,7 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Title
         fields = '__all__'
+        read_only_fields = ('rating',)
 
     def validate_year(self, value):
         if value > timezone.now().year:
@@ -34,9 +36,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """
-    Позволяет создавать и отображать категории произведений.
-    """
+    """Позволяет создавать и отображать категории произведений."""
 
     class Meta:
         model = models.Category
@@ -54,11 +54,15 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
+    """Позволяет создавать и отображать жанры обзоры."""
+
     author = SlugRelatedField(  # Показывает вместо ID автора его username
-        read_only=True,
         slug_field='username'
     )
-    # сделать score в ветки для оценки
+    score = serializers.IntegerField(
+        min_value=1,
+        max_value=10
+    )
 
     class Meta:
         fields = '__all__'

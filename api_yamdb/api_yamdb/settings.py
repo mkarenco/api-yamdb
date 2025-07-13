@@ -128,3 +128,4 @@ SIMPLE_JWT = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'
+AUTH_USER_MODEL = 'users.CustomUser'

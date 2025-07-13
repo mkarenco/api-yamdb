@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils import timezone
 
 User = get_user_model()
 
@@ -53,7 +52,15 @@ class Title(models.Model):
         blank=True,
         null=True
     )
-    rating = models.IntegerField('Рейтинг', default=None)
+    rating = models.PositiveSmallIntegerField(
+        'Рейтинг',
+        null=True,
+        blank=True,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        ]
+    )
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
@@ -74,12 +81,6 @@ class Title(models.Model):
     def __str__(self):
         return self.name[:50]
 
-    def clean(self):
-        if self.year > timezone.now().year:
-            raise ValidationError(
-                'Год выпуска произведения не может быть больше текущего!'
-            )
-
 
 class Reviews(models.Model):
     """
@@ -98,6 +99,12 @@ class Reviews(models.Model):
         related_name='reviews'
     )
     text = models.TextField()
+    score = models.PositiveSmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(10)
+        ]
+    )
     created = models.DateTimeField('Дата добавления', auto_now_add=True)
 
     class Meta:
