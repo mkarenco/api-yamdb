@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from . import views
+from .views import UserObtainAuthToken
 
 router_v1 = DefaultRouter()
 router_v1.register(
@@ -14,7 +15,7 @@ router_v1.register(
 urlpatterns = [
     path(
         'token/',
-        TokenObtainPairView.as_view(),
+        UserObtainAuthToken.as_view(),
         name='get_token'
     ),
     path(
