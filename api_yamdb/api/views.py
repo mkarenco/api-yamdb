@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, pagination, permissions, viewsets
 
 from reviews import models
-
 from . import custom_permissions, serializers
 from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
