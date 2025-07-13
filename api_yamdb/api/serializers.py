@@ -56,19 +56,6 @@ class GenreSerializer(serializers.ModelSerializer):
         model = models.Genre
         fields = '__all__'
 
-        
-from rest_framework import serializers
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """
-    Основной класс по работе с моделью User и обработки кастомных полей
-    """
-    pass
-
-
-# Все что выше перенести в приложение users
-
 
 class ReviewsSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(  # Показывает вместо ID автора его username
