@@ -127,5 +127,13 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# email section settings
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'fokpost@yandex.ru'
+EMAIL_HOST_PASSWORD = 'gbikxymmducdvbhz'
 DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'
 AUTH_USER_MODEL = 'users.CustomUser'
