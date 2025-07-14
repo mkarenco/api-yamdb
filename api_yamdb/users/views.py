@@ -3,7 +3,7 @@ from rest_framework import permissions, response, status, views, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .serializers import UserSerializer, RegisterUserSerializer
+from .serializers import RegisterUserSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -47,19 +47,12 @@ class UsersViewSet(viewsets.ModelViewSet):
             return self.request.user
         return super().get_object()
 
-    def get_permissions(self):
-        return (permissions.IsAuthenticated(),)
-
 
 class UserObtainAuthToken(views.APIView):
     """
-    API эндпоинт для получения кода подтверждения.
-    Проверяется наличие пользователя по username в случае отсутвия
-    пользователя возвращается ответ 404 NOT FOUND
-    Проводится проверка отправленного пользователем кода подтверждения
-    если не совпадает отправленный и введеный код возвращается
-    ответ 400 BAD REQUEST
-    В остальных случаях возвращается 200 OK
+    View для получения кода подтверждения.
+    Проверяется наличие пользователя по username
+    Проводится проверка отправленного пользователем кода подтверждения.
     """
     permission_classes = (permissions.AllowAny,)
 
