@@ -2,7 +2,7 @@ import secrets
 
 from django.core.mail import send_mail
 
-from api_yamdb import settings
+from api_yamdb.settings import DEFAULT_FROM_EMAIL
 
 
 def _assign_confirmation_code():
@@ -19,7 +19,7 @@ def _send_confirmation_email(email, confirmation_code):
     send_mail(
         'Код подтверждения для регистрации',
         f'Ваш код подтверждения: {confirmation_code}',
-        settings.DEFAULT_FROM_EMAIL,
+        DEFAULT_FROM_EMAIL,
         [email],
         fail_silently=False,
     )

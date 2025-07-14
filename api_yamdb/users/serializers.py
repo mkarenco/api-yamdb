@@ -1,41 +1,11 @@
 from sqlite3 import IntegrityError
 
-from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
+from django.contrib.auth import get_user_model
+from rest_framework import serializers, validators
 
-from . import models
 from .logic import _assign_confirmation_code, _send_confirmation_email
 
-
-class UserSerializer(serializers.ModelSerializer):
-    """
-    выводит список пользователей, просмотр профиля и
-    обновление данных пользователя
-    """
-
-    email = serializers.EmailField(
-        validators=[
-            UniqueValidator(
-                queryset=models.CustomUser.objects.all(),
-                message='Пользователь с таким email уже существует'
-            )
-        ]
-    )
-
-    class Meta:
-        model = models.CustomUser
-        fields = '__all__'
-        read_only_fields = ('role',)
-
-    def update(self, instance, validated_data):
-        if not (
-            self.context['request'].user.is_staff
-            and 'role' in validated_data
-        ):
-            raise serializers.ValidationError(
-                'У вас недостаточно прав для изменения роли.'
-            )
-        return super().update(instance, validated_data)
+User = get_user_model()
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
@@ -45,7 +15,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     """
 
     class Meta:
-        model = models.CustomUser
+        model = User
         fields = ('username', 'email',)
         read_only_fields = ('role',)
 
@@ -63,10 +33,9 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         """
         Создание пользователя с неактивным состоянием по умолчанию.
         """
-
         email = validated_data['email']
         try:
-            user, created = models.CustomUser.objects.get_or_create(
+            user, created = User.objects.get_or_create(
                 username=validated_data['username'],
                 defaults={'email': email, 'is_active': False}
             )
@@ -94,3 +63,34 @@ class RegisterUserSerializer(serializers.ModelSerializer):
                 f'Ошибка отправки письма: {e}'
             )
         return user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    выводит список пользователей, просмотр профиля и
+    обновление данных пользователя
+    """
+
+    email = serializers.EmailField(
+        validators=[
+            validators.UniqueValidator(
+                queryset=User.objects.all(),
+                message='Пользователь с таким email уже существует'
+            )
+        ]
+    )
+
+    class Meta:
+        model = User
+        fields = '__all__'
+        read_only_fields = ('role',)
+
+    def update(self, instance, validated_data):
+        if not (
+            self.context['request'].user.is_staff
+            and 'role' in validated_data
+        ):
+            raise serializers.ValidationError(
+                'У вас недостаточно прав для изменения роли.'
+            )
+        return super().update(instance, validated_data)
