@@ -21,9 +21,14 @@ router_v1.register(
     basename='genre'
 )
 router_v1.register(
-    r'titles/(?P<title_id>\d+)/reviews',  # Ищет title по ID
-    views.ReviewsViewSet,
+    r'titles/(?P<title_id>\d+)/reviews',
+    views.ReviewViewSet,
     basename='title-reviews'
+)
+router_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    views.CommentViewSet,
+    basename='title-review-comments'
 )
 
 urlpatterns = [

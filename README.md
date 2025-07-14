@@ -49,7 +49,6 @@ ___
 + Django REST Framework
 
 + SimpleJWT
-
 ___
 
 ## 🛠 Установка и запуск проекта

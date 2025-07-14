@@ -2,7 +2,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, pagination, permissions, viewsets
 
 from reviews import models
-from . import custom_permissions, serializers
+
+from . import serializers
+from .custom_permissions import IsAuthorOrReadOnly
 from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
@@ -55,17 +57,17 @@ class GenreViewSet(ListCreateDeleteViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(viewsets.ModelViewSet):
     """
-    (GET, POST, PUT, PATCH, DELETE):
+    (GET, POST, PUT, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем проиведения.
     """
 
-    queryset = models.Reviews.objects.all()
-    serializer_class = serializers.ReviewsSerializer
+    queryset = models.Review.objects.all()
+    serializer_class = serializers.ReviewSerializer
+    # Доработать права (Пользователь-админитратор)
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly,
-        custom_permissions.IsAuthorOrReadOnly
+        permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
     pagination_class = pagination.PageNumberPagination
 
@@ -89,3 +91,30 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.delete()
         update_rating(self.get_title())
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    (GET, POST, PUT, PATCH и DELETE):
+    получаем, отправляем, редактируем или удаляем комментарии к обзорам.
+    """
+
+    queryset = models.Comment.objects.all()
+    serializer_class = serializers.CommentSerializer
+    # Доработать права (Пользователь-админитратор)
+    permission_classes = (
+        permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
+    )
+    pagination_class = pagination.PageNumberPagination
+
+    def get_review(self):
+        return get_object_or_404(models.Review, pk=self.kwargs['review_id'])
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            title=self.get_review()
+        )

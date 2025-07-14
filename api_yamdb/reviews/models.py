@@ -2,23 +2,9 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from .abstract_models import AbstractFeedback, DivisionAttributeModel
+
 User = get_user_model()
-
-
-class DivisionAttributeModel(models.Model):
-    """
-    Абстрактная модель.
-    Содержит поля: имени и уникальный слаг.
-    """
-
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True)
-
-    class Meta:
-        abstract = True
-
-    def __str__(self):
-        return self.name[:50]
 
 
 class Category(DivisionAttributeModel):
@@ -82,12 +68,11 @@ class Title(models.Model):
         return self.name[:50]
 
 
-class Reviews(models.Model):
+class Review(AbstractFeedback):
     """
     Модель обзора к произведению (Модели Title).
     Содержит автора, ссылку на произведение, текст, и дату создания.
     """
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -98,17 +83,33 @@ class Reviews(models.Model):
         on_delete=models.CASCADE,
         related_name='reviews'
     )
-    text = models.TextField()
     score = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(1),
             MaxValueValidator(10)
         ]
     )
-    created = models.DateTimeField('Дата добавления', auto_now_add=True)
 
     class Meta:
         ordering = ('-created', 'author')
 
-    def __str__(self):
-        return self.text[:30]
+
+class Comment(AbstractFeedback):
+    """
+    Модель комментария к обзору (Модели Review).
+    Содержит автора, ссылку на обзор, текст, и дату создания.
+    """
+
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
+
+    class Meta:
+        ordering = ('-created', 'author')
