@@ -3,7 +3,6 @@ from rest_framework import permissions, response, status, views, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .models import CustomUser
 from .serializers import UserSerializer, RegisterUserSerializer
 
 User = get_user_model()
@@ -69,8 +68,8 @@ class UserObtainAuthToken(views.APIView):
         confirmation_code = request.data.get('confirmation_code')
 
         try:
-            user = CustomUser.objects.get(username=username)
-        except CustomUser.DoesNotExist:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
             return Response(
                 'Пользователь не найден.',
                 status=status.HTTP_404_NOT_FOUND
