@@ -2,9 +2,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, pagination, permissions, viewsets
 
 from reviews import models
-
 from . import serializers
-from .custom_permissions import IsAuthorOrReadOnly
+from .custom_permissions import IsAuthorOrReadOnly, IsAdminRoleUser
 from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
@@ -21,8 +20,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = models.Title.objects.all()
     serializer_class = serializers.TitleSerializer
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
-    # Доработать права (Пользователь-админитратор)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAdminRoleUser)
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
@@ -38,8 +37,8 @@ class CategoryViewSet(ListCreateDeleteViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-    # Доработать права (Пользователь-админитратор)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAdminRoleUser)
 
 
 class GenreViewSet(ListCreateDeleteViewSet):
@@ -53,8 +52,8 @@ class GenreViewSet(ListCreateDeleteViewSet):
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     lookup_field = 'slug'
-    # Доработать права (Пользователь-админитратор)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          IsAdminRoleUser)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
