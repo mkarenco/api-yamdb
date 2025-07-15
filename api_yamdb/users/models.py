@@ -64,3 +64,11 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username[:30]
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN or self.is_staff
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR

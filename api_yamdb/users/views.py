@@ -5,6 +5,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.throttling import ScopedRateThrottle
 
 from .serializers import RegisterUserSerializer, UserSerializer
+from .permissions import IsAdmin
 
 User = get_user_model()
 
@@ -36,7 +37,7 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAdmin,)
     lookup_field = 'username'
 
     def get_object(self):

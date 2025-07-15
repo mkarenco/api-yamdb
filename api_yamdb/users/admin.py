@@ -16,7 +16,10 @@ class CustomUserAdmin(UserAdmin):
         'is_active'
     )
     list_editable = (
+        'last_name',
+        'is_active ',
         'role',
+        'is_staff',
     )
     search_fields = (
         'username',
