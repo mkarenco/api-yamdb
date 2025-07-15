@@ -1,12 +1,12 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.viewsets import ModelViewSet
 
 from reviews import models
 from . import serializers
-from .custom_permissions import IsAuthorOrReadOnly, IsAdminRoleUser
+from .custom_permissions import IsAdminRoleUser, IsAuthorOrReadOnly
 from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
@@ -28,7 +28,7 @@ class TitleViewSet(ModelViewSet):
     ordering_fields = ('name', 'year', 'rating')
     ordering = ('-rating', 'name', 'year')
     permission_classes = (
-      IsAuthenticatedOrReadOnly, IsAdminRoleUser
+        IsAuthenticatedOrReadOnly, IsAdminRoleUser
     )
 
 
@@ -42,12 +42,6 @@ class CategoryViewSet(ListCreateDeleteViewSet):
 
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    lookup_field = 'slug'
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name', )
-    permission_classes = (
-      permissions.IsAuthenticatedOrReadOnly, IsAdminRoleUser
-    )
 
 
 class GenreViewSet(ListCreateDeleteViewSet):
@@ -60,10 +54,6 @@ class GenreViewSet(ListCreateDeleteViewSet):
 
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
-    lookup_field = 'slug'
-    permission_classes = (
-      permissions.IsAuthenticatedOrReadOnly, IsAdminRoleUser
-    )
 
 
 class ReviewViewSet(ModelViewSet):
