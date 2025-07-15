@@ -39,6 +39,13 @@ class Genre(DivisionAttributeModel):
         verbose_name_plural = 'Жанры'
 
 
+class Title_Genre(models.Model):
+    """Промежуточная модель для связи ManyToManyField произведений и жанров."""
+
+    title_id = models.ForeignKey('Title', on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+
 class Title(models.Model):
     """
     Модель объекта произведения (фильма, книги и т.п.).
@@ -52,6 +59,7 @@ class Title(models.Model):
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
+        through='Title_Genre',
         related_name='titles',
         verbose_name='Жанр')
     category = models.ForeignKey(
