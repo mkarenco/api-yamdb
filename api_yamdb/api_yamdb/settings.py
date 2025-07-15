@@ -1,5 +1,7 @@
+import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -127,5 +129,14 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# email section settings
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = BASE_DIR / 'email'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'
 AUTH_USER_MODEL = 'users.CustomUser'
