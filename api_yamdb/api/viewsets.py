@@ -1,8 +1,10 @@
-from rest_framework import mixins
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import mixins
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.viewsets import GenericViewSet
+
+from .custom_permissions import IsAdminRoleUser
 
 
 class ListCreateDeleteViewSet(
@@ -28,5 +30,6 @@ class ListCreateDeleteViewSet(
     search_fields = ('name', 'slug')
     ordering_fields = ('name', 'slug')
     ordering = ('name', '-year')
-    # Доработать права (Пользователь-админитратор)
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (
+        IsAuthenticatedOrReadOnly, IsAdminRoleUser
+    )
