@@ -1,5 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, pagination, permissions, viewsets
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from reviews import models
 from . import serializers
@@ -8,7 +11,7 @@ from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(ModelViewSet):
     """
     (GET, POST, PUT, PATCH и DELETE):
     Обеспечивает фильтрацию произведений по имени, году выпуска,
@@ -19,9 +22,14 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = models.Title.objects.all()
     serializer_class = serializers.TitleSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsAdminRoleUser)
+    search_fields = ('name', 'description')
+    ordering_fields = ('name', 'year', 'rating')
+    ordering = ('-rating', 'name', 'year')
+    permission_classes = (
+      IsAuthenticatedOrReadOnly, IsAdminRoleUser
+    )
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
@@ -37,8 +45,9 @@ class CategoryViewSet(ListCreateDeleteViewSet):
     lookup_field = 'slug'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name', )
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsAdminRoleUser)
+    permission_classes = (
+      permissions.IsAuthenticatedOrReadOnly, IsAdminRoleUser
+    )
 
 
 class GenreViewSet(ListCreateDeleteViewSet):
@@ -52,11 +61,12 @@ class GenreViewSet(ListCreateDeleteViewSet):
     queryset = models.Genre.objects.all()
     serializer_class = serializers.GenreSerializer
     lookup_field = 'slug'
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
-                          IsAdminRoleUser)
+    permission_classes = (
+      permissions.IsAuthenticatedOrReadOnly, IsAdminRoleUser
+    )
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(ModelViewSet):
     """
     (GET, POST, PUT, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем проиведения.
@@ -64,11 +74,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     queryset = models.Review.objects.all()
     serializer_class = serializers.ReviewSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_fields = ('author__username', 'title__name')
+    search_fields = (
+        'text',
+        'author__username',
+        'title__name'
+    )
+    ordering_fields = ('score', 'pub_date')
+    ordering = ('-pub_date')
     # Доработать права (Пользователь-админитратор)
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
+        IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    pagination_class = pagination.PageNumberPagination
 
     def get_title(self):
         return get_object_or_404(models.Title, pk=self.kwargs['title_id'])
@@ -92,7 +110,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         update_rating(self.get_title())
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ModelViewSet):
     """
     (GET, POST, PUT, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем комментарии к обзорам.
@@ -100,11 +118,19 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     queryset = models.Comment.objects.all()
     serializer_class = serializers.CommentSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_fields = ('author__username')
+    search_fields = (
+        'text',
+        'author__username',
+        'title__name'
+    )
+    ordering_fields = ('pub_date')
+    ordering = ('-pub_date')
     # Доработать права (Пользователь-админитратор)
     permission_classes = (
-        permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
+        IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly
     )
-    pagination_class = pagination.PageNumberPagination
 
     def get_review(self):
         return get_object_or_404(models.Review, pk=self.kwargs['review_id'])
@@ -115,5 +141,5 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            title=self.get_review()
+            review=self.get_review()
         )

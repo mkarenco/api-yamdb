@@ -17,16 +17,18 @@ class CustomUserAdmin(UserAdmin):
     )
     list_editable = (
         'role',
-        'email ',
-        'last_name',
     )
     search_fields = (
         'username',
-        'first_name'
+        'first_name',
+        'last_name',
+        'email '
     )
     list_filter = (
         'role',
         'is_active',
         'is_staff'
     )
-    ordering = ('username',)
+    ordering = (
+        'username',
+    )

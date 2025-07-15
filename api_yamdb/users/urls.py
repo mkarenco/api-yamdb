@@ -2,7 +2,6 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from . import views
-from .views import UserObtainAuthToken
 
 
 router_v1 = DefaultRouter()
@@ -15,7 +14,7 @@ router_v1.register(
 urlpatterns = [
     path(
         'token/',
-        UserObtainAuthToken.as_view(),
+        views.UserObtainAuthToken.as_view(),
         name='get_token'
     ),
     path(
