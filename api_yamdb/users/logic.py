@@ -6,16 +6,12 @@ from api_yamdb.settings import DEFAULT_FROM_EMAIL
 
 
 def _assign_confirmation_code():
-    """
-    генерация кода подтверждения для вновь зарегистрированного
-    """
+    """генерация кода подтверждения для вновь зарегистрированного."""
     return ''.join(secrets.choice('0123456789ABCDEFG') for _ in range(6))
 
 
 def _send_confirmation_email(email, confirmation_code):
-    """
-    Отправляет код подтверждения на указанный email при регистрации
-    """
+    """Отправляет код подтверждения на указанный email при регистрации."""
     send_mail(
         'Код подтверждения для регистрации',
         f'Ваш код подтверждения: {confirmation_code}',

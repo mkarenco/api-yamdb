@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import permissions, response, status, views, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.throttling import ScopedRateThrottle
 
 from .serializers import RegisterUserSerializer, UserSerializer
 
@@ -54,7 +55,11 @@ class UserObtainAuthToken(views.APIView):
     Проверяется наличие пользователя по username
     Проводится проверка отправленного пользователем кода подтверждения.
     """
+
     permission_classes = (permissions.AllowAny,)
+    # Ограничение ввода кода подтверждения, чтобы избежать перебора
+    throttle_classes = (ScopedRateThrottle,)
+    throttle_scope = 'message_send_limit'
 
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')

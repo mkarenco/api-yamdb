@@ -14,6 +14,15 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     Принимает email и username.
     """
 
+    email = serializers.EmailField(
+        validators=[
+            validators.UniqueValidator(
+                queryset=User.objects.all(),
+                message='Пользователь с таким email уже существует'
+            )
+        ]
+    )
+
     class Meta:
         model = User
         fields = ('username', 'email',)
@@ -70,15 +79,6 @@ class UserSerializer(serializers.ModelSerializer):
     выводит список пользователей, просмотр профиля и
     обновление данных пользователя
     """
-
-    email = serializers.EmailField(
-        validators=[
-            validators.UniqueValidator(
-                queryset=User.objects.all(),
-                message='Пользователь с таким email уже существует'
-            )
-        ]
-    )
 
     class Meta:
         model = User

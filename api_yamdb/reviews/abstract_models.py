@@ -27,7 +27,7 @@ class AbstractFeedback(models.Model):
     """
 
     text = models.TextField()
-    created = models.DateTimeField('Дата добавления', auto_now_add=True)
+    pub_date = models.DateTimeField('Дата добавления', auto_now_add=True)
 
     class Meta:
         abstract = True

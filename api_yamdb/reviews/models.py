@@ -91,7 +91,7 @@ class Review(AbstractFeedback):
     )
 
     class Meta:
-        ordering = ('-created', 'author')
+        ordering = ('-pub_date', 'author')
 
 
 class Comment(AbstractFeedback):
@@ -112,4 +112,4 @@ class Comment(AbstractFeedback):
     )
 
     class Meta:
-        ordering = ('-created', 'author')
+        ordering = ('-pub_date', 'author')
