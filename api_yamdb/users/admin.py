@@ -32,6 +32,4 @@ class CustomUserAdmin(UserAdmin):
         'is_active',
         'is_staff'
     )
-    ordering = (
-        'username',
-    )
+    ordering = ('username',)

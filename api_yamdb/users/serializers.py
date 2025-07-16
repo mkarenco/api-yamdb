@@ -13,12 +13,19 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     Сериализатор для запроса кода подтверждения при регистрации.
     Принимает email и username.
     """
-
     email = serializers.EmailField(
         validators=[
             validators.UniqueValidator(
                 queryset=User.objects.all(),
                 message='Пользователь с таким email уже существует'
+            )
+        ]
+    )
+    username = serializers.EmailField(
+        validators=[
+            validators.UniqueValidator(
+                queryset=User.objects.all(),
+                message='Пользователь с таким username уже существует'
             )
         ]
     )
@@ -77,7 +84,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     """
     выводит список пользователей, просмотр профиля и
-    обновление данных пользователя
+    обновление данных пользователя.
     """
 
     class Meta:
@@ -87,8 +94,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if not (
-            self.context['request'].user.is_staff
-            and 'role' in validated_data
+            self.context['request'].user.is_admin
         ):
             raise serializers.ValidationError(
                 'У вас недостаточно прав для изменения роли.'

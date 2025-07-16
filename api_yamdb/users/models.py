@@ -21,6 +21,15 @@ class CustomUser(AbstractUser):
     - confirmation_code — код подтверждения для регистрации/входа
     """
 
+    username = models.CharField(
+        unique=True,
+        max_length=150,
+        help_text='Уникальное имя пользователя'
+    )
+    email = models.EmailField(
+        unique=True,
+        help_text='e-mail пользователя',
+    )
     bio = models.TextField(
         'Биография',
         blank=True,
@@ -67,7 +76,7 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN or self.is_staff
+        return self.role == ADMIN
 
     @property
     def is_moderator(self):
