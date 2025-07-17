@@ -22,7 +22,7 @@ class Command(BaseCommand):
         )
 
     @transaction.atomic
-    def handle(self, args, *options):
+    def handle(self, *args, **options):
         base_path = options['path']
         self.load_categories(f'{base_path}category.csv')
         self.load_genres(f'{base_path}genre.csv')
@@ -78,24 +78,6 @@ class Command(BaseCommand):
                 )
         self.stdout.write(self.style.SUCCESS('Пользователи загружены.'))
 
-    def load_genre_title(self, file_path):
-        self.stdout.write(
-            f'Загрузка связей произведений и жанров из {file_path}.'
-        )
-        with open(file_path, 'r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                models.Title_Genre.objects.get_or_create(
-                    id=row['id'],
-                    defaults={
-                        'title_id': row['title_id'],
-                        'genre_id': row['genre_id']
-                    }
-                )
-        self.stdout.write(
-            self.style.SUCCESS('Связи произведений и жанров загружены.')
-        )
-
     def load_titles(self, file_path):
         self.stdout.write(f'Загрузка произведений из {file_path}.')
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -105,20 +87,41 @@ class Command(BaseCommand):
                     models.Category,
                     id=row['category']
                 )
-                relations = models.Title_Genre.objects.filter(
-                    title_id=row['id']
-                )
-                genres = models.Genre.objects.filter(title_genre__in=relations)
                 models.Title.objects.get_or_create(
                     id=row['id'],
                     defaults={
                         'name': row['name'],
                         'year': row['year'],
-                        'category': category,
-                        'genre': genres
+                        'category': category
                     }
                 )
         self.stdout.write(self.style.SUCCESS('Произведения загружены.'))
+
+    def load_genre_title(self, file_path):
+        self.stdout.write(
+            f'Загрузка связей произведений и жанров из {file_path}.'
+        )
+        with open(file_path, 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                title = get_object_or_404(
+                    models.Title,
+                    id=row['title_id']
+                )
+                genre = get_object_or_404(
+                    models.Genre,
+                    id=row['genre_id']
+                )
+                models.Title_Genre.objects.get_or_create(
+                    id=row['id'],
+                    defaults={
+                        'title': title,
+                        'genre': genre
+                    }
+                )
+        self.stdout.write(
+            self.style.SUCCESS('Связи произведений и жанров загружены.')
+        )
 
     def load_reviews(self, file_path):
         self.stdout.write(f'Загрузка отзывов из {file_path}.')

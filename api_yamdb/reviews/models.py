@@ -26,8 +26,8 @@ class Genre(DivisionAttributeModel):
 class Title_Genre(models.Model):
     """Промежуточная модель для связи ManyToManyField произведений и жанров."""
 
-    title_id = models.ForeignKey('Title', on_delete=models.CASCADE)
-    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey('Title', on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
 class Title(models.Model):
