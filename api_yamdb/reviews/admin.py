@@ -15,9 +15,11 @@ class DivisionAttributeAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'name',
+        'slug'
     )
-    list_display_links = (
+    list_filter = (
         'name',
+        'slug',
     )
     ordering = (
         'name',
@@ -43,23 +45,26 @@ class TitleAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'year',
-        'description',
         'category',
-        'rating'
+        'rating',
+        'description'
+    )
+    list_editable = (
+        'year',
+        'description',
     )
     search_fields = (
         'name',
+        'description',
     )
     list_filter = (
         'year',
-        'category',
-        'rating'
-    )
-    list_display_links = (
-        'name',
+        'rating',
     )
     ordering = (
-        'name', '-year', '-rating'
+        'name',
+        '-year',
+        '-rating'
     )
     empty_value_display = '-пусто-'
 
@@ -70,13 +75,18 @@ class ReviewAdmin(admin.ModelAdmin):
 
     list_display = (
         'author',
-        'text',
         'score',
+        'text',
         'pub_date',
+    )
+    list_editable = (
+        'text',
+        'score'
     )
     search_fields = (
         'author',
-        'text'
+        'text',
+        'title'
     )
     list_filter = (
         'author',
@@ -84,7 +94,7 @@ class ReviewAdmin(admin.ModelAdmin):
         'pub_date',
     )
     ordering = (
-        '-pub_date', 'author', '-score'
+        '-pub_date',
     )
 
 
@@ -97,14 +107,17 @@ class CommentAdmin(admin.ModelAdmin):
         'text',
         'pub_date',
     )
+    list_editable = (
+        'text',
+    )
     search_fields = (
         'author',
-        'text'
+        'text',
     )
     list_filter = (
         'author',
         'pub_date',
     )
     ordering = (
-        '-pub_date', 'author'
+        '-pub_date',
     )

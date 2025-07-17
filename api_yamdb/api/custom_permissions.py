@@ -6,6 +6,7 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
     Разрешает редактирование и удаление только автору объекта.
     Остальные пользователи могут только читать.
     """
+
     def has_object_permission(self, request, view, obj):
         return (
             request.method in permissions.SAFE_METHODS
@@ -13,24 +14,32 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         )
 
 
-class IsAdmin(permissions.BasePermission):
-    """Права доступа для администратора."""
+class IsAdminRole(permissions.BasePermission):
+    """Разрешает доступ если пользователь аутентифицирован и он админ."""
+
     def has_object_permission(self, request, view, obj):
         return (
-                request.user.is_authenticated and request.user.is_admin
+            request.user.is_authenticated and request.user.is_admin
         )
 
 
-class IsModerator(permissions.BasePermission):
+class IsAuthorModeratorOrAdmin(permissions.BasePermission):
     """
-    Если пользователь аутентифицирован, он модератор, он может
-    изменять, удалять комментарии/обзоры.
+    Разрешает:
+    - Читать всем.
+    - Создавать аутентифицированным пользователям.
+    - Редактировать / удалять: автор, модератор или админ.
     """
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return (
-                request.user.is_authenticated
-                and request.user.role == 'moderator'
-                and request.method in ('PUT', 'PATCH', 'DELETE')
+            obj.author == request.user
+            or getattr(request.user, 'is_moderator', False)
+            or getattr(request.user, 'is_admin', False)
         )
-
-

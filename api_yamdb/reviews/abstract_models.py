@@ -10,8 +10,16 @@ class DivisionAttributeModel(models.Model):
     Содержит поля: имени и уникальный слаг.
     """
 
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('Слаг', unique=True)
+    name = models.CharField(
+        'название',
+        max_length=256,
+        help_text='Введите название категории (например, "Фильмы", "Книги").'
+    )
+    slug = models.SlugField(
+        unique=True,
+        max_length=50,
+        help_text='Укажите уникальный slug для категории (используется в URL).'
+    )
 
     class Meta:
         abstract = True
@@ -26,8 +34,15 @@ class AbstractFeedback(models.Model):
     Содержит поля: текста и даты создания
     """
 
-    text = models.TextField()
-    pub_date = models.DateTimeField('Дата добавления', auto_now_add=True)
+    text = models.TextField(
+        'Текст',
+        help_text='Введите текст обзора.'
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации',
+        auto_now_add=True,
+        help_text='Дата публикации обзора (заполняется автоматически).'
+    )
 
     class Meta:
         abstract = True

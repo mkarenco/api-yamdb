@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from rest_framework import serializers
-from rest_framework.relations import SlugRelatedField
-from rest_framework.validators import UniqueTogetherValidator
+from rest_framework import relations, serializers, validators
 
 from reviews import models
 
@@ -41,6 +39,15 @@ class TitleSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     """Позволяет создавать и отображать категории произведений."""
 
+    slug = serializers.EmailField(
+        validators=[
+            validators.UniqueValidator(
+                queryset=models.Category.objects.all(),
+                message='Поле slug каждой категории должно быть уникальным'
+            )
+        ]
+    )
+
     class Meta:
         model = models.Category
         fields = '__all__'
@@ -59,7 +66,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Позволяет создавать и отображать жанры обзоры."""
 
-    author = SlugRelatedField(
+    author = relations.SlugRelatedField(
         slug_field='username',
         queryset=User.objects.all()
     )
@@ -72,7 +79,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = models.Review
         validators = [
-            UniqueTogetherValidator(
+            validators.UniqueTogetherValidator(
                 queryset=models.Review.objects.all(),
                 fields=['author', 'title'],
                 message='Вы уже оставили отзыв на это произведение.'
@@ -85,7 +92,7 @@ class CommentSerializer(serializers.ModelSerializer):
     Позволяет создавать и отображать комментарии к обзорам.
     """
 
-    author = SlugRelatedField(
+    author = relations.SlugRelatedField(
         slug_field='username',
         queryset=User.objects.all()
     )
