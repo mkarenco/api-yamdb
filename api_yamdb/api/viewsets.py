@@ -1,15 +1,12 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins
-from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import filters, mixins, permissions, viewsets
 
-from .custom_permissions import IsAdminRoleUser
+from .custom_permissions import IsAdminRole
 
 
 class ListCreateDeleteViewSet(
     mixins.ListModelMixin, mixins.CreateModelMixin,
-    mixins.DestroyModelMixin, GenericViewSet
+    mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
     """
     Базовый абстрактный ViewSet для операций:
@@ -25,11 +22,17 @@ class ListCreateDeleteViewSet(
     """
 
     lookup_field = 'slug'
-    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    )
     filterset_fields = ('name', 'slug')
     search_fields = ('name', 'slug')
     ordering_fields = ('name', 'slug')
     ordering = ('name', '-year')
-    permission_classes = (
-        IsAuthenticatedOrReadOnly, IsAdminRoleUser
-    )
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (permissions.AllowAny(),)
+        return (IsAdminRole(),)

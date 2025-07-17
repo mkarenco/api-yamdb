@@ -13,23 +13,28 @@ class CustomUserAdmin(UserAdmin):
         'email',
         'role',
         'bio',
+        'is_staff',
         'is_active'
     )
     list_editable = (
+        'first_name',
         'last_name',
-        'is_active ',
-        'role',
-        'is_staff',
+        'email',
+        'bio',
+        'role'
     )
     search_fields = (
         'username',
         'first_name',
         'last_name',
-        'email '
+        'email'
     )
     list_filter = (
         'role',
         'is_active',
         'is_staff'
     )
-    ordering = ('username',)
+    ordering = (
+        'username',
+        'last_name'
+    )
