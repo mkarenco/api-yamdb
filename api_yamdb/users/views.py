@@ -5,6 +5,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.throttling import ScopedRateThrottle
 
 from .serializers import RegisterUserSerializer, UserSerializer
+from api.custom_permissions import IsAdmin
 
 User = get_user_model()
 
@@ -15,7 +16,6 @@ class RegisterUserViewSet(views.APIView):
     Принимает POST-запрос с данными:
     (email, username, password).
     """
-
     serializer_class = RegisterUserSerializer
     permission_classes = (permissions.AllowAny,)
 
@@ -33,12 +33,10 @@ class UsersViewSet(viewsets.ModelViewSet):
     """
     API-эндпоинт для просмотра или редактирования профиля пользователя.
     """
-
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = 'username'
-
+    # доделать логику по доступу аутентифированному пользователю
     def get_object(self):
         """
         Возвращает аутентифицированного пользователя по эндпоинту me/
@@ -64,6 +62,12 @@ class UserObtainAuthToken(views.APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         confirmation_code = request.data.get('confirmation_code')
+
+        if not username or not confirmation_code:
+            return Response(
+                {'error': 'username и confirmation_code обязательны.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             user = User.objects.get(username=username)

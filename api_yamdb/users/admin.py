@@ -16,7 +16,10 @@ class CustomUserAdmin(UserAdmin):
         'is_active'
     )
     list_editable = (
+        'last_name',
+        'is_active ',
         'role',
+        'is_staff',
     )
     search_fields = (
         'username',
@@ -29,6 +32,4 @@ class CustomUserAdmin(UserAdmin):
         'is_active',
         'is_staff'
     )
-    ordering = (
-        'username',
-    )
+    ordering = ('username',)

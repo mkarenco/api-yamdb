@@ -6,7 +6,6 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
     Разрешает редактирование и удаление только автору объекта.
     Остальные пользователи могут только читать.
     """
-
     def has_object_permission(self, request, view, obj):
         return (
             request.method in permissions.SAFE_METHODS
@@ -14,14 +13,24 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         )
 
 
-class IsAdminRoleUser(permissions.BasePermission):
-    """
-    Разрешает добавление и удаление объектов только
-    пользователям c ролью (role) 'admin'.
-    """
-
+class IsAdmin(permissions.BasePermission):
+    """Права доступа для администратора."""
     def has_object_permission(self, request, view, obj):
         return (
-            request.method in permissions.SAFE_METHODS
-            or request.user.role() == 'admin'
+                request.user.is_authenticated and request.user.is_admin
         )
+
+
+class IsModerator(permissions.BasePermission):
+    """
+    Если пользователь аутентифицирован, он модератор, он может
+    изменять, удалять комментарии/обзоры.
+    """
+    def has_object_permission(self, request, view, obj):
+        return (
+                request.user.is_authenticated
+                and request.user.role == 'moderator'
+                and request.method in ('PUT', 'PATCH', 'DELETE')
+        )
+
+
