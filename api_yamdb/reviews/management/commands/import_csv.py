@@ -112,13 +112,7 @@ class Command(BaseCommand):
                     models.Genre,
                     id=row['genre_id']
                 )
-                models.Title_Genre.objects.get_or_create(
-                    id=row['id'],
-                    defaults={
-                        'title': title,
-                        'genre': genre
-                    }
-                )
+                title.genre.add(genre)
         self.stdout.write(
             self.style.SUCCESS('Связи произведений и жанров загружены.')
         )

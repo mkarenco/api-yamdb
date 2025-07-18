@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+
 User = get_user_model()
 
 
@@ -11,11 +12,12 @@ class DivisionAttributeModel(models.Model):
     """
 
     name = models.CharField(
-        'название',
+        'Название',
         max_length=256,
         help_text='Введите название категории (например, "Фильмы", "Книги").'
     )
     slug = models.SlugField(
+        'Слаг',
         unique=True,
         max_length=50,
         help_text='Укажите уникальный slug для категории (используется в URL).'

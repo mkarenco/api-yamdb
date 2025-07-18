@@ -23,13 +23,6 @@ class Genre(DivisionAttributeModel):
         verbose_name_plural = 'Жанры'
 
 
-class Title_Genre(models.Model):
-    """Промежуточная модель для связи ManyToManyField произведений и жанров."""
-
-    title = models.ForeignKey('Title', on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-
-
 class Title(models.Model):
     """
     Модель объекта произведения (фильма, книги и т.п.).
@@ -53,19 +46,8 @@ class Title(models.Model):
         null=True,
         help_text='Добавьте описание произведения (опционально).'
     )
-    rating = models.PositiveSmallIntegerField(
-        'Рейтинг',
-        null=True,
-        blank=True,
-        validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10)
-        ],
-        help_text='Укажите рейтинг от 1 до 10 (опционально).'
-    )
     genre = models.ManyToManyField(
         Genre,
-        through='Title_Genre',
         related_name='titles',
         verbose_name='Жанр',
         help_text='Выберите один или несколько жанров для произведения.'
@@ -113,7 +95,15 @@ class Review(AbstractFeedback):
     )
 
     class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         ordering = ('-pub_date',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('title', 'author'),
+                name='unique_review_author_title'
+            )
+        ]
 
 
 class Comment(AbstractFeedback):
@@ -136,4 +126,6 @@ class Comment(AbstractFeedback):
     )
 
     class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
         ordering = ('-pub_date',)
