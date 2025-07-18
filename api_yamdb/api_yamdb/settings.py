@@ -126,13 +126,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.ScopedRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
         'user': '10000/day',
-        'anon': '1000/day',
-        'message_send_limit': '3/hour',
+        'anon': '1000/day'
     },
 }
 

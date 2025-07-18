@@ -4,14 +4,13 @@ from rest_framework import (
     permissions,
     response,
     status,
-    throttling,
     views,
+    filters,
     viewsets,
 )
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api.custom_permissions import IsAdminRole
-
+from api.custom_permissions import IsAdminOrSeperUserRole
 from .serializers import RegisterUserSerializer, UserSerializer
 
 User = get_user_model()
@@ -29,11 +28,11 @@ class RegisterUserViewSet(views.APIView):
     def post(self, request, *args, **kwargs):
         serializer = RegisterUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
         return response.Response({
-            'username': serializer.validated_data['username'],
-            'email': serializer.validated_data['email']
-        })
+            'username': user.username,
+            'email': user.email
+        }, status=status.HTTP_200_OK)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -42,20 +41,18 @@ class UsersViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+    permission_classes = (IsAdminOrSeperUserRole,)
 
-    def get_permissions(self):
-        """
-        Аутентифицированный пользователь может:
-        просматривать данные своей учетной записи и изменять её.
-        Все остальные действия доступны только администратору.
-        """
-        if self.action in ('list', 'create', 'destroy'):
-            return (IsAdminRole(),)
-        if self.action in ('retrieve', 'update', 'partial_update'):
-            if self.kwargs.get(self.lookup_field) == 'me':
-                return (permissions.IsAuthenticated(),)
-            return (IsAdminRole(),)
-        return (permissions.IsAuthenticated(),)
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return response.Response(
+                {'detail': 'Метод PUT запрещён.'},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+        return super().update(request, *args, **kwargs)
 
     @decorators.action(
         detail=False,
@@ -90,9 +87,6 @@ class UserObtainAuthToken(views.APIView):
     """
 
     permission_classes = (permissions.AllowAny,)
-    # Ограничение ввода кода подтверждения, чтобы избежать перебора
-    throttle_classes = (throttling.ScopedRateThrottle,)
-    throttle_scope = 'message_send_limit'
 
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
@@ -107,12 +101,12 @@ class UserObtainAuthToken(views.APIView):
             user = User.objects.get(username=username)
         except User.DoesNotExist:
             return response.Response(
-                'Пользователь не найден.',
+                {'error': 'Пользователь не найден.'},
                 status=status.HTTP_404_NOT_FOUND
             )
         if user.confirmation_code != confirmation_code:
             return response.Response(
-                'Неправильный код подтверждения!',
+                {'error': 'Неправильный код подтверждения!'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         user.is_active = True

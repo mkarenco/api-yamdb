@@ -4,7 +4,9 @@ from rest_framework import filters, permissions, viewsets
 
 from reviews import models
 from . import serializers
-from .custom_permissions import IsAdminRole, IsAuthorModeratorOrAdmin
+from .custom_permissions import (
+    IsAdminOrSeperUserRole, IsAuthorModeratorOrAdmin
+)
 from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
@@ -33,7 +35,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in permissions.SAFE_METHODS:
             return (permissions.AllowAny(),)
-        return (IsAdminRole(),)
+        return (IsAdminOrSeperUserRole(),)
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):

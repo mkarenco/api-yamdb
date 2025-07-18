@@ -55,7 +55,7 @@ class CustomUser(AbstractUser):
         Group,
         verbose_name='Группы',
         blank=True,
-        related_name='custom_users',
+        related_name='users',
         related_query_name='user',
         help_text='Группы к которым принадлежит пользователь'
     )
@@ -63,7 +63,7 @@ class CustomUser(AbstractUser):
         Permission,
         verbose_name='Права пользователя',
         blank=True,
-        related_name='custom_users',
+        related_name='users',
         related_query_name='user',
         help_text='Специальные права для пользователя'
     )
@@ -77,7 +77,7 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN and self.is_staff
+        return self.role == ADMIN
 
     @property
     def is_moderator(self):

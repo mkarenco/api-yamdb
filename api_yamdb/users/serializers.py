@@ -5,6 +5,7 @@ from rest_framework import serializers, validators
 from django.core.validators import RegexValidator
 
 from .logic import _assign_confirmation_code, _send_confirmation_email
+from .models import ROLE_CHOICES
 
 User = get_user_model()
 
@@ -66,8 +67,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             if not created:
                 if user.email != email:
                     raise serializers.ValidationError(
-                        'Пользователь с таким username уже существует '
-                        'и имеет другой email.'
+                        'Пользователь с таким email уже существует'
                     )
                 if user.is_active:
                     raise serializers.ValidationError(
@@ -95,9 +95,6 @@ class UserSerializer(serializers.ModelSerializer):
     обновление данных пользователя.
     """
 
-    first_name = serializers.CharField(max_length=254)
-    last_name = serializers.CharField(max_length=254)
-    email = serializers.EmailField(max_length=254)
     username = serializers.CharField(
         max_length=150,
         validators=[
@@ -107,15 +104,28 @@ class UserSerializer(serializers.ModelSerializer):
             )
         ]
     )
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150)
+    email = serializers.EmailField(max_length=254)
+    role = serializers.ChoiceField(
+        choices=ROLE_CHOICES,
+        default='user',
+    )
 
     class Meta:
         model = User
-        fields = '__all__'
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
 
     def update(self, instance, validated_data):
-        if not (
-            self.context['request'].user.is_admin
-        ):
+        request = self.context.get('request')
+        if not request.user.is_admin and 'role' in validated_data:
             raise serializers.ValidationError(
                 'У вас недостаточно прав для изменения роли.'
             )

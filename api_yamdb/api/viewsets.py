@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, viewsets
 
-from .custom_permissions import IsAdminRole
+from .custom_permissions import IsAdminOrSeperUserRole
 
 
 class ListCreateDeleteViewSet(
@@ -35,4 +35,4 @@ class ListCreateDeleteViewSet(
     def get_permissions(self):
         if self.action == 'list':
             return (permissions.AllowAny(),)
-        return (IsAdminRole(),)
+        return (IsAdminOrSeperUserRole(),)
