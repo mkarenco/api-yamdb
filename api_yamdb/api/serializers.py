@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import relations, serializers, validators
+from django.core.validators import RegexValidator
 
 from reviews import models
 
@@ -39,11 +40,17 @@ class TitleSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     """Позволяет создавать и отображать категории произведений."""
 
-    slug = serializers.EmailField(
+    name = serializers.CharField(max_length=256)
+    slug = serializers.CharField(
+        max_length=50,
         validators=[
             validators.UniqueValidator(
                 queryset=models.Category.objects.all(),
                 message='Поле slug каждой категории должно быть уникальным'
+            ),
+            RegexValidator(
+                regex=r'^[-a-zA-Z0-9_]+$',
+                message='Slug содержит недопустимые символы'
             )
         ]
     )
@@ -76,8 +83,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
         model = models.Review
+        fields = '__all__'
         validators = [
             validators.UniqueTogetherValidator(
                 queryset=models.Review.objects.all(),

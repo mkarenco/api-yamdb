@@ -15,7 +15,14 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
 
 class IsAdminRole(permissions.BasePermission):
-    """Разрешает доступ если пользователь аутентифицирован и он админ."""
+    """
+    Разрешает доступ, если пользователь аутентифицирован и он админ.
+    """
+
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated and request.user.is_admin
+        )
 
     def has_object_permission(self, request, view, obj):
         return (

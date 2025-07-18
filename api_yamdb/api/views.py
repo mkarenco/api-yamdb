@@ -60,7 +60,7 @@ class GenreViewSet(ListCreateDeleteViewSet):
     serializer_class = serializers.GenreSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet, IsAuthorModeratorOrAdmin):
+class ReviewViewSet(viewsets.ModelViewSet):
     """
     (GET, POST, PUT, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем проиведения.
@@ -76,7 +76,7 @@ class ReviewViewSet(viewsets.ModelViewSet, IsAuthorModeratorOrAdmin):
     filterset_fields = ('author__username', 'title__name')
     search_fields = ('text', 'author__username', 'title__name')
     ordering_fields = ('score', 'pub_date')
-    ordering = ('-pub_date')
+    ordering = ('-pub_date',)
     permission_classes = (IsAuthorModeratorOrAdmin,)
 
     def get_title(self):
@@ -101,7 +101,7 @@ class ReviewViewSet(viewsets.ModelViewSet, IsAuthorModeratorOrAdmin):
         update_rating(self.get_title())
 
 
-class CommentViewSet(viewsets.ModelViewSet, IsAuthorModeratorOrAdmin):
+class CommentViewSet(viewsets.ModelViewSet):
     """
     (GET, POST, PUT, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем комментарии к обзорам.
@@ -114,10 +114,10 @@ class CommentViewSet(viewsets.ModelViewSet, IsAuthorModeratorOrAdmin):
         filters.SearchFilter,
         filters.OrderingFilter
     )
-    filterset_fields = ('author__username')
+    filterset_fields = ('author__username',)
     search_fields = ('text', 'author__username', 'title__name')
-    ordering_fields = ('pub_date')
-    ordering = ('-pub_date')
+    ordering_fields = ('pub_date',)
+    ordering = ('-pub_date',)
     permission_classes = (IsAuthorModeratorOrAdmin,)
 
     def get_review(self):

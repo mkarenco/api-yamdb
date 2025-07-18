@@ -30,10 +30,10 @@ class RegisterUserViewSet(views.APIView):
         serializer = RegisterUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return response.Response(
-            'Код подтверждения отправлен на вашу почту.',
-            status=status.HTTP_200_OK
-        )
+        return response.Response({
+            'username': serializer.validated_data['username'],
+            'email': serializer.validated_data['email']
+        })
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -42,7 +42,6 @@ class UsersViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    lookup_field = 'username'
 
     def get_permissions(self):
         """

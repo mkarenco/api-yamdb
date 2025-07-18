@@ -28,6 +28,7 @@ class CustomUser(AbstractUser):
     )
     email = models.EmailField(
         unique=True,
+        max_length=254,
         help_text='e-mail пользователя',
     )
     bio = models.TextField(
@@ -76,7 +77,7 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN
+        return self.role == ADMIN and self.is_staff
 
     @property
     def is_moderator(self):

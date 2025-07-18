@@ -2,6 +2,7 @@ from sqlite3 import IntegrityError
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers, validators
+from django.core.validators import RegexValidator
 
 from .logic import _assign_confirmation_code, _send_confirmation_email
 
@@ -13,7 +14,9 @@ class RegisterUserSerializer(serializers.ModelSerializer):
     Сериализатор для запроса кода подтверждения при регистрации.
     Принимает email и username.
     """
+
     email = serializers.EmailField(
+        max_length=254,
         validators=[
             validators.UniqueValidator(
                 queryset=User.objects.all(),
@@ -21,8 +24,13 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             )
         ]
     )
-    username = serializers.EmailField(
+    username = serializers.CharField(
+        max_length=150,
         validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Имя пользователя содержит недопустимые символы'
+            ),
             validators.UniqueValidator(
                 queryset=User.objects.all(),
                 message='Пользователь с таким username уже существует'
@@ -87,10 +95,22 @@ class UserSerializer(serializers.ModelSerializer):
     обновление данных пользователя.
     """
 
+    first_name = serializers.CharField(max_length=254)
+    last_name = serializers.CharField(max_length=254)
+    email = serializers.EmailField(max_length=254)
+    username = serializers.CharField(
+        max_length=150,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z',
+                message='Имя пользователя содержит недопустимые символы'
+            )
+        ]
+    )
+
     class Meta:
         model = User
         fields = '__all__'
-        read_only_fields = ('role',)
 
     def update(self, instance, validated_data):
         if not (
