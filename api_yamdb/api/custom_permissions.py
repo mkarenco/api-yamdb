@@ -1,16 +1,24 @@
 from rest_framework import permissions
 
 
-class IsAuthorOrReadOnly(permissions.BasePermission):
+class IsAdminRole(permissions.BasePermission):
     """
-    Разрешает редактирование и удаление только автору объекта.
-    Остальные пользователи могут только читать.
+    Разрешает:
+    - Читать всем.
+    - Создавать/удалять объекты только пользователям-админам.
     """
 
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated and request.user.is_admin
+
     def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
         return (
-            request.method in permissions.SAFE_METHODS
-            or obj.author == request.user
+            request.user.is_authenticated
+            and (request.user.is_admin or request.user.is_superuser)
         )
 
 

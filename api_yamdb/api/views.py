@@ -1,41 +1,46 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
+from rest_framework import filters, viewsets
 
 from reviews import models
 from . import serializers
-from .custom_permissions import (
-    IsAdminOrSeperUserRole, IsAuthorModeratorOrAdmin
-)
+from .custom_permissions import IsAdminRole, IsAuthorModeratorOrAdmin
+from .filters import TitleFilter
 from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """
-    (GET, POST, PUT, PATCH и DELETE):
+    (GET, POST, PATCH и DELETE):
     Обеспечивает фильтрацию произведений по имени, году выпуска,
     категории и жанрам (по слагу).
     Добавлять, редактировать и удалять произведения
     имеет право только пользователь-админитратор.
     """
 
-    queryset = models.Title.objects.all()
-    serializer_class = serializers.TitleSerializer
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
         filters.OrderingFilter
     )
-    filterset_fields = ('name', 'year', 'category__slug', 'genre__slug')
+    filterset_class = TitleFilter
     search_fields = ('name', 'description')
     ordering_fields = ('name', 'year', 'rating')
     ordering = ('-rating', 'name', 'year')
+    permission_classes = (IsAdminRole,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
-    def get_permissions(self):
-        if self.action in permissions.SAFE_METHODS:
-            return (permissions.AllowAny(),)
-        return (IsAdminOrSeperUserRole(),)
+    def get_queryset(self):
+        return models.Title.objects.annotate(
+            rating=Avg('reviews__score')
+        ).all().order_by('name')
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return serializers.TitleReadSerializer
+        return serializers.TitleWriteSerializer
 
 
 class CategoryViewSet(ListCreateDeleteViewSet):
@@ -64,7 +69,7 @@ class GenreViewSet(ListCreateDeleteViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """
-    (GET, POST, PUT, PATCH и DELETE):
+    (GET, POST, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем проиведения.
     """
 
@@ -80,6 +85,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     ordering_fields = ('score', 'pub_date')
     ordering = ('-pub_date',)
     permission_classes = (IsAuthorModeratorOrAdmin,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_title(self):
         return get_object_or_404(models.Title, pk=self.kwargs['title_id'])
@@ -105,7 +111,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """
-    (GET, POST, PUT, PATCH и DELETE):
+    (GET, POST, PATCH и DELETE):
     получаем, отправляем, редактируем или удаляем комментарии к обзорам.
     """
 
@@ -121,6 +127,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     ordering_fields = ('pub_date',)
     ordering = ('-pub_date',)
     permission_classes = (IsAuthorModeratorOrAdmin,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_review(self):
         return get_object_or_404(models.Review, pk=self.kwargs['review_id'])
