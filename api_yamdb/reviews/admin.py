@@ -46,7 +46,6 @@ class TitleAdmin(admin.ModelAdmin):
         'name',
         'year',
         'category',
-        'rating',
         'description'
     )
     list_editable = (
@@ -59,12 +58,10 @@ class TitleAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'year',
-        'rating',
     )
     ordering = (
         'name',
-        '-year',
-        '-rating'
+        '-year'
     )
     empty_value_display = '-пусто-'
 
