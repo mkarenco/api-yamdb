@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class IsAdminRole(permissions.BasePermission):
+class IsAdminRoleOrRead(permissions.BasePermission):
     """
     Разрешает:
     - Читать всем.
@@ -14,18 +14,11 @@ class IsAdminRole(permissions.BasePermission):
         return request.user.is_authenticated and request.user.is_admin
 
     def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return (
-            request.user.is_authenticated
-            and (request.user.is_admin or request.user.is_superuser)
-        )
+        return self.has_permission(request, view)
 
 
 class IsAdminOrSeperUserRole(permissions.BasePermission):
-    """
-    Разрешает доступ, если пользователь аутентифицирован и он админ.
-    """
+    """Разрешает доступ, если пользователь аутентифицирован и он админ."""
 
     def has_permission(self, request, view):
         return (
@@ -34,13 +27,10 @@ class IsAdminOrSeperUserRole(permissions.BasePermission):
         )
 
     def has_object_permission(self, request, view, obj):
-        return (
-            request.user.is_authenticated
-            and (request.user.is_admin or request.user.is_superuser)
-        )
+        return self.has_permission(request, view)
 
 
-class IsAuthorModeratorOrAdmin(permissions.BasePermission):
+class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
     """
     Разрешает:
     - Читать всем.
@@ -57,6 +47,6 @@ class IsAuthorModeratorOrAdmin(permissions.BasePermission):
             return True
         return (
             obj.author == request.user
-            or getattr(request.user, 'is_moderator', False)
-            or getattr(request.user, 'is_admin', False)
+            or request.user.is_moderator
+            or request.user.is_admin
         )

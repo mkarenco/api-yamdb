@@ -8,25 +8,17 @@ from . import models
 class CustomUserAdmin(UserAdmin):
     list_display = (
         'username',
-        'first_name',
-        'last_name',
         'email',
         'role',
-        'bio',
         'is_staff',
         'is_active'
     )
     list_editable = (
-        'first_name',
-        'last_name',
         'email',
-        'bio',
         'role'
     )
     search_fields = (
         'username',
-        'first_name',
-        'last_name',
         'email'
     )
     list_filter = (
@@ -36,5 +28,4 @@ class CustomUserAdmin(UserAdmin):
     )
     ordering = (
         'username',
-        'last_name'
     )

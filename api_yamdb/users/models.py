@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 USER = 'user'
@@ -21,16 +21,6 @@ class CustomUser(AbstractUser):
     - confirmation_code — код подтверждения для регистрации/входа
     """
 
-    username = models.CharField(
-        unique=True,
-        max_length=150,
-        help_text='Уникальное имя пользователя'
-    )
-    email = models.EmailField(
-        unique=True,
-        max_length=254,
-        help_text='e-mail пользователя',
-    )
     bio = models.TextField(
         'Биография',
         blank=True,
@@ -50,22 +40,6 @@ class CustomUser(AbstractUser):
         blank=True,
         null=True,
         help_text='Код подтверждения для регистрации или авторизации'
-    )
-    groups = models.ManyToManyField(
-        Group,
-        verbose_name='Группы',
-        blank=True,
-        related_name='users',
-        related_query_name='user',
-        help_text='Группы к которым принадлежит пользователь'
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        verbose_name='Права пользователя',
-        blank=True,
-        related_name='users',
-        related_query_name='user',
-        help_text='Специальные права для пользователя'
     )
 
     class Meta:

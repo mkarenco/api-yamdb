@@ -5,9 +5,8 @@ from rest_framework import filters, viewsets
 
 from reviews import models
 from . import serializers
-from .custom_permissions import IsAdminRole, IsAuthorModeratorOrAdmin
+from .custom_permissions import IsAdminRoleOrRead, IsAuthorOrModeratorOrAdmin
 from .filters import TitleFilter
-from .utils import update_rating
 from .viewsets import ListCreateDeleteViewSet
 
 
@@ -29,13 +28,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     search_fields = ('name', 'description')
     ordering_fields = ('name', 'year', 'rating')
     ordering = ('-rating', 'name', 'year')
-    permission_classes = (IsAdminRole,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (IsAdminRoleOrRead,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_queryset(self):
         return models.Title.objects.annotate(
             rating=Avg('reviews__score')
-        ).all().order_by('name')
+        )
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -84,8 +83,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     search_fields = ('text', 'author__username', 'title__name')
     ordering_fields = ('score', 'pub_date')
     ordering = ('-pub_date',)
-    permission_classes = (IsAuthorModeratorOrAdmin,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (IsAuthorOrModeratorOrAdmin,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
         return get_object_or_404(models.Title, pk=self.kwargs['title_id'])
@@ -98,15 +97,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
             author=self.request.user,
             title=self.get_title()
         )
-        update_rating(self.get_title())
-
-    def perform_update(self, serializer):
-        serializer.save()
-        update_rating(self.get_title())
-
-    def perform_destroy(self, instance):
-        instance.delete()
-        update_rating(self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -126,8 +116,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     search_fields = ('text', 'author__username', 'title__name')
     ordering_fields = ('pub_date',)
     ordering = ('-pub_date',)
-    permission_classes = (IsAuthorModeratorOrAdmin,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (IsAuthorOrModeratorOrAdmin,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
         return get_object_or_404(models.Review, pk=self.kwargs['review_id'])

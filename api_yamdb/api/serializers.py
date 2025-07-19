@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 from reviews import models
 
-
 User = get_user_model()
 
 
@@ -47,7 +46,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
-        read_only_fields = ('id', 'rating')
+        read_only_fields = ('rating',)
 
     def get_rating(self, obj):
         return getattr(obj, 'rating', None)

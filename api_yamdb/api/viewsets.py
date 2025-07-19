@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 
-from .custom_permissions import IsAdminRole
+from .custom_permissions import IsAdminRoleOrRead
 
 
 class ListCreateDeleteViewSet(
@@ -31,4 +31,4 @@ class ListCreateDeleteViewSet(
     search_fields = ('name', 'slug')
     ordering_fields = ('name', 'slug')
     ordering = ('name',)
-    permission_classes = (IsAdminRole,)
+    permission_classes = (IsAdminRoleOrRead,)
