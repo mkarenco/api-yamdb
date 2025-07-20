@@ -8,6 +8,8 @@ from .abstract_models import AbstractFeedback, DivisionAttributeModel
 
 User = get_user_model()
 
+MIN_VALUE = 1
+MAX_VALUE = 10
 
 def is_year_lte_now(year):
     """
@@ -70,6 +72,7 @@ class Title(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
+        related_name='titles',
         verbose_name='Категория',
         help_text='Выберите категорию произведения (опционально).'
     )
@@ -83,23 +86,13 @@ class Title(models.Model):
     def __str__(self):
         return self.name[:50]
 
-    def clean_year(self):
-        year = self.cleaned_data.get('year')
-        if is_year_lte_now(year):
-            return year
-
 
 class Review(AbstractFeedback):
     """
     Модель обзора к произведению (Модели Title).
     Содержит автора, ссылку на произведение, текст, и дату создания.
     """
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        help_text='Выберите автора обзора.'
-    )
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -108,16 +101,16 @@ class Review(AbstractFeedback):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10)
+            MinValueValidator(MIN_VALUE),
+            MaxValueValidator(MAX_VALUE)
         ],
-        help_text='Укажите оценку произведения от 1 до 10.'
+        help_text=f'Укажите оценку произведения от {MIN_VALUE} до {MAX_VALUE}.'
     )
 
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        ordering = ('-pub_date',)
+        default_related_name = 'reviews'
         constraints = [
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -132,12 +125,6 @@ class Comment(AbstractFeedback):
     Содержит автора, ссылку на обзор, текст, и дату создания.
     """
 
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        help_text='Выберите автора комментария.'
-    )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -148,4 +135,5 @@ class Comment(AbstractFeedback):
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'
         ordering = ('-pub_date',)
