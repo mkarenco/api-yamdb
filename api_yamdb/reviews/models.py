@@ -1,16 +1,31 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from .abstract_models import AbstractFeedback, DivisionAttributeModel
 
 User = get_user_model()
 
 
+def is_year_lte_now(year):
+    """
+    Метод валидации года выпуска произведения.
+    Год не может быть больше текущего.
+    """
+    if year > timezone.now().year:
+        raise ValidationError(
+            f'{year} год больше {timezone.now().year}. ',
+            'Нельзя добавить произведение с годом выпуска больше текущего!'
+        )
+    return True
+
+
 class Category(DivisionAttributeModel):
     """Модель объекта категории произведения."""
 
-    class Meta:
+    class Meta(DivisionAttributeModel.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
@@ -18,7 +33,7 @@ class Category(DivisionAttributeModel):
 class Genre(DivisionAttributeModel):
     """Модель объекта жанра произведения."""
 
-    class Meta:
+    class Meta(DivisionAttributeModel.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -28,7 +43,7 @@ class Title(models.Model):
     Модель объекта произведения (фильма, книги и т.п.).
     Объект модели может иметь несколько жанров и только одну категорию.
     Нельзя добавить произведение с годом выпуска в будущем.
-    К проиведнию можно написать обзор (комментарий).
+    К проиведению можно написать обзор (комментарий).
     """
 
     name = models.CharField(
@@ -48,7 +63,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        related_name='titles',
         verbose_name='Жанр',
         help_text='Выберите один или несколько жанров для произведения.'
     )
@@ -56,7 +70,6 @@ class Title(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='titles',
         verbose_name='Категория',
         help_text='Выберите категорию произведения (опционально).'
     )
@@ -64,9 +77,16 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+        default_related_name = 'titles'
+        ordering = ('-year', 'name')
 
     def __str__(self):
         return self.name[:50]
+
+    def clean_year(self):
+        year = self.cleaned_data.get('year')
+        if is_year_lte_now(year):
+            return year
 
 
 class Review(AbstractFeedback):

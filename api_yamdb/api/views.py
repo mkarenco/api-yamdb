@@ -5,9 +5,9 @@ from rest_framework import filters, viewsets
 
 from reviews import models
 from . import serializers
-from .custom_permissions import IsAdminRoleOrRead, IsAuthorOrModeratorOrAdmin
+from .permissions import IsAdminRoleOrRead, IsAuthorOrModeratorOrAdmin
 from .filters import TitleFilter
-from .viewsets import ListCreateDeleteViewSet
+from .viewsets import DivisionAttributeViewSet
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -19,6 +19,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     имеет право только пользователь-админитратор.
     """
 
+    queryset = models.Title.objects.annotate(
+        rating=Avg('reviews__score')
+    )
     filter_backends = (
         DjangoFilterBackend,
         filters.SearchFilter,
@@ -31,18 +34,13 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminRoleOrRead,)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
-    def get_queryset(self):
-        return models.Title.objects.annotate(
-            rating=Avg('reviews__score')
-        )
-
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return serializers.TitleReadSerializer
         return serializers.TitleWriteSerializer
 
 
-class CategoryViewSet(ListCreateDeleteViewSet):
+class CategoryViewSet(DivisionAttributeViewSet):
     """
     (GET, POST и DELETE):
     Создание и удаление категории, получение списка всех категорий.
@@ -54,7 +52,7 @@ class CategoryViewSet(ListCreateDeleteViewSet):
     serializer_class = serializers.CategorySerializer
 
 
-class GenreViewSet(ListCreateDeleteViewSet):
+class GenreViewSet(DivisionAttributeViewSet):
     """
     (GET, POST и DELETE):
     Создание и удаление жанра, получение списка всех жанров.
