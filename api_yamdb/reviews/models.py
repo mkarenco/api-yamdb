@@ -18,9 +18,11 @@ def is_year_lte_now(year):
     """
     if year > timezone.now().year:
         raise ValidationError(
-            f'{year} год больше {timezone.now().year}. ',
-            'Нельзя добавить произведение с годом выпуска больше текущего!'
+            f'Год выпуска {year} не может быть больше текущего года ('
+            f'{timezone.now().year}). '
+            'Нельзя добавить произведение с годом выпуска в будущем.'
         )
+
     return True
 
 
@@ -45,7 +47,7 @@ class Title(models.Model):
     Модель объекта произведения (фильма, книги и т.п.).
     Объект модели может иметь несколько жанров и только одну категорию.
     Нельзя добавить произведение с годом выпуска в будущем.
-    К проиведению можно написать обзор (комментарий).
+    К произведению можно написать обзор (комментарий).
     """
 
     name = models.CharField(
@@ -55,6 +57,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         'Год выпуска',
+        validators=[is_year_lte_now],
         help_text='Укажите год выпуска произведения. Не может быть в будущем.'
     )
     description = models.TextField(
@@ -136,4 +139,3 @@ class Comment(AbstractFeedback):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
-        ordering = ('-pub_date',)
