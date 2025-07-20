@@ -24,6 +24,7 @@ class DivisionAttributeModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('name',)
 
     def __str__(self):
         return self.name[:50]
@@ -34,7 +35,11 @@ class AbstractFeedback(models.Model):
     Абстрактная модель.
     Содержит поля: текста и даты создания
     """
-
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        help_text='Выберите автора обзора.'
+    )
     text = models.TextField(
         'Текст',
         help_text='Введите текст обзора.'
@@ -47,6 +52,7 @@ class AbstractFeedback(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.text[:30]

@@ -1,10 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 
-from .custom_permissions import IsAdminRoleOrRead
+from .permissions import IsAdminRoleOrRead
 
 
-class ListCreateDeleteViewSet(
+class DivisionAttributeViewSet(
     mixins.ListModelMixin, mixins.CreateModelMixin,
     mixins.DestroyModelMixin, viewsets.GenericViewSet
 ):
@@ -18,7 +18,7 @@ class ListCreateDeleteViewSet(
     - поиск по полям,
     - фильтрацию,
     - сортировку,
-    -  поиск объекту по слаг.
+    - поиск объекту по слаг.
     """
 
     lookup_field = 'slug'
