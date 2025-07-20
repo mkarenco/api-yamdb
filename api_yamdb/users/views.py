@@ -9,7 +9,7 @@ from rest_framework import (
     decorators
 )
 
-from api.custom_permissions import IsAdminOrSeperUserRole
+from api.permissions import IsAdminOrSeperUserRole
 from . import serializers
 
 

@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class ApiConfig(AppConfig):
     name = 'api'
-    verbose_name = "Программный интерфейс приложения"
+    verbose_name = 'Программный интерфейс приложения'

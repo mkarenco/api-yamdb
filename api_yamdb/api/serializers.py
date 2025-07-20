@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from rest_framework import serializers
 
 from reviews import models
@@ -31,9 +30,9 @@ class TitleReadSerializer(serializers.ModelSerializer):
     Для категории и жанров указывается slug.
     """
 
-    genre = GenreSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.SerializerMethodField()
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = models.Title
@@ -46,10 +45,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
-        read_only_fields = ('rating',)
-
-    def get_rating(self, obj):
-        return getattr(obj, 'rating', None)
+        read_only_fields = fields
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
@@ -76,12 +72,9 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return TitleReadSerializer(instance, context=self.context).data
 
-    def validate_year(self, value):
-        if value > timezone.now().year:
-            raise serializers.ValidationError(
-                'Нельзя добавить произведение с годом выпуска больше текущего!'
-            )
-        return value
+    def validate_year(self, year):
+        if models.is_year_lte_now(year):
+            return year
 
 
 class ReviewSerializer(serializers.ModelSerializer):

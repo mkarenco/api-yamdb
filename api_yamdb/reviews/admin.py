@@ -29,13 +29,11 @@ class DivisionAttributeAdmin(admin.ModelAdmin):
 @admin.register(models.Category)
 class CategoryAdmin(DivisionAttributeAdmin):
     """Настройка админ-зоны для модели Category."""
-    pass
 
 
 @admin.register(models.Genre)
 class GenreAdmin(DivisionAttributeAdmin):
     """Настройка админ-зоны для модели Genre."""
-    pass
 
 
 @admin.register(models.Title)
