@@ -13,12 +13,12 @@ router_v1.register(
 urlpatterns = [
     path(
         'v1/auth/token/',
-        views.UserObtainAuthToken.as_view(),
+        views.obtain_auth_token,
         name='get_token'
     ),
     path(
         'v1/auth/signup/',
-        views.RegisterUserViewSet.as_view(),
+        views.register_user,
         name='register'
     ),
     path('v1/', include(router_v1.urls)),

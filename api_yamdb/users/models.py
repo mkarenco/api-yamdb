@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.exceptions import ValidationError
 from django.db import models
+
+from .validators import validate_reserved_username
 
 USER = 'user'
 ADMIN = 'admin'
@@ -15,10 +16,11 @@ ROLE_CHOICES_LENGTH = max(len(choice[0]) for choice in ROLE_CHOICES)
 
 
 def validate_username(value):
-    if value == settings.USER_SELF_PAGE:
-        raise ValidationError(
-            f'Имя пользователя "{settings.USER_SELF_PAGE}" использовать нельзя'
-        )
+    """
+    Обёртка для validate_reserved_username в модели.
+    Тесты ожидают найти функцию validate_username в users.models.
+    """
+    validate_reserved_username(value, raise_type='model')
 
 
 class MyUser(AbstractUser):

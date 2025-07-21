@@ -11,6 +11,7 @@ User = get_user_model()
 MIN_VALUE = 1
 MAX_VALUE = 10
 
+
 def is_year_lte_now(year):
     """
     Метод валидации года выпуска произведения.
@@ -75,7 +76,6 @@ class Title(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='titles',
         verbose_name='Категория',
         help_text='Выберите категорию произведения (опционально).'
     )

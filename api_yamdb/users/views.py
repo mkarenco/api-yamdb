@@ -1,40 +1,64 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import (
     permissions,
     status,
-    views,
     viewsets,
     filters,
     response,
-    decorators
+    decorators,
+    exceptions
 )
 
+
+from .logic import _assign_confirmation_code, _send_confirmation_email
 from api.permissions import IsAdmin
 from . import serializers
-
 
 User = get_user_model()
 
 
-class RegisterUserViewSet(views.APIView):
+@decorators.api_view(('POST',))
+def register_user(request):
     """
-    Вьюсет для регистрации нового пользователя.
-    Принимает POST-запрос с данными:
-    (email, username, password).
+    Контроллер регистрации: всё взаимодействие с БД и отправка почты.
     """
 
-    serializer_class = serializers.RegisterUserSerializer
-    permission_classes = (permissions.AllowAny,)
+    serializer = serializers.RegisterUserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data['email']
+    username = serializer.validated_data['username']
 
-    def post(self, request, *args, **kwargs):
-        serializer = serializers.RegisterUserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return response.Response({
-            'username': user.username,
-            'email': user.email
-        }, status=status.HTTP_200_OK)
+    if User.objects.filter(email=email).exclude(username=username).exists():
+        raise exceptions.ValidationError(
+            {'email': 'Пользователь с таким email уже существует.'}
+        )
+
+    confirmation_code = _assign_confirmation_code()
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            'email': email,
+            'is_active': False,
+            'confirmation_code': confirmation_code,
+        }
+    )
+
+    if not created:
+        if user.email != email:
+            raise exceptions.ValidationError(
+                {'email': 'Неверный email для этого username.'}
+            )
+        user.confirmation_code = confirmation_code
+        user.save(update_fields=['confirmation_code'])
+
+    _send_confirmation_email(user.email, user.confirmation_code)
+
+    return response.Response(
+        {'username': user.username, 'email': user.email},
+        status=status.HTTP_200_OK
+    )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -75,11 +99,34 @@ class UsersViewSet(viewsets.ModelViewSet):
         return response.Response(serializer.data)
 
 
-class UserObtainAuthToken(views.APIView):
-    permission_classes = (permissions.AllowAny,)
+@decorators.api_view(('POST',))
+def obtain_auth_token(request):
+    """
+    Функция для получения кода подтверждения.
+    """
+    username = request.data.get('username')
+    code = request.data.get('confirmation_code')
 
-    def post(self, request, *args, **kwargs):
-        serializer = serializers.TokenObtainSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token_data = serializer.save()
-        return response.Response(token_data, status=status.HTTP_200_OK)
+    if not username or not code:
+        raise exceptions.ValidationError(
+            {'detail': 'username и confirmation_code обязательны'}
+        )
+
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        raise exceptions.NotFound(
+            {'username': 'Пользователь не найден'}
+        )
+
+    if user.confirmation_code != code:
+        raise exceptions.ValidationError(
+            {'confirmation_code': 'Неверный код подтверждения!'}
+        )
+
+    # КОД ПОДТВЕРЖДЕНИЯ ПРОВЕРЕН — удаляем его, чтобы был одноразовым
+    user.confirmation_code = ''
+    return response.Response(
+        {'token': str(AccessToken.for_user(user))},
+        status=status.HTTP_200_OK
+    )
