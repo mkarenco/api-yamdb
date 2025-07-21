@@ -1,7 +1,5 @@
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db import models
-
-User = get_user_model()
 
 
 class DivisionAttributeModel(models.Model):
@@ -12,13 +10,12 @@ class DivisionAttributeModel(models.Model):
 
     name = models.CharField(
         'Название',
-        max_length=256,
+        max_length=settings.NAME_LENGTH,
         help_text='Введите название категории (например, "Фильмы", "Книги").'
     )
     slug = models.SlugField(
-        'Слаг',
         unique=True,
-        max_length=50,
+        max_length=settings.SLUG_LENGTH,
         help_text='Укажите уникальный slug для категории (используется в URL).'
     )
 
@@ -33,10 +30,10 @@ class DivisionAttributeModel(models.Model):
 class AbstractFeedback(models.Model):
     """
     Абстрактная модель.
-    Содержит поля: текста и даты создания
+    Содержит поля: текста и даты создания.
     """
     author = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         help_text='Выберите автора обзора.'
     )
