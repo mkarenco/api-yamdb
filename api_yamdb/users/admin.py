@@ -4,8 +4,8 @@ from django.contrib.auth.admin import UserAdmin
 from . import models
 
 
-@admin.register(models.CustomUser)
-class CustomUserAdmin(UserAdmin):
+@admin.register(models.MyUser)
+class MyUserAdmin(UserAdmin):
     list_display = (
         'username',
         'email',

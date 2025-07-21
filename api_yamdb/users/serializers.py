@@ -1,7 +1,9 @@
+import re
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
-
-from rest_framework import exceptions, serializers, validators
+from rest_framework import exceptions, serializers
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .logic import _assign_confirmation_code, _send_confirmation_email
@@ -10,15 +12,19 @@ from .models import ROLE_CHOICES
 User = get_user_model()
 
 
-class RegisterUserSerializer(serializers.ModelSerializer):
+class RegisterUserSerializer(serializers.Serializer):
     """
     Сериализатор для запроса кода подтверждения при регистрации.
     Принимает email и username.
     """
 
-    email = serializers.EmailField(max_length=254)
+    email = serializers.EmailField(
+        max_length=settings.EMAIL_LENGTH,
+        required=True
+    )
     username = serializers.CharField(
-        max_length=150,
+        max_length=settings.USERNAME_LENGTH,
+        required=True,
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
@@ -27,20 +33,15 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         ]
     )
 
-    class Meta:
-        model = User
-        fields = ('username', 'email',)
-        read_only_fields = ('role',)
-
-    def validate_username(self, value):
+    def validate_username(self, username):
         """
         Проверка имени пользователя на запрещенный username: me
         """
-        if value.lower() == 'me':
+        if username == settings.USER_SELF_PAGE:
             raise serializers.ValidationError(
-                'Использовать имя me в качестве username нельзя'
+                f'Использовать имя {settings.USER_SELF_PAGE} нельзя'
             )
-        return value
+        return username
 
     def create(self, validated_data):
         email = validated_data['email']
@@ -82,28 +83,6 @@ class UserSerializer(serializers.ModelSerializer):
     обновление данных пользователя.
     """
 
-    username = serializers.CharField(
-        max_length=150,
-        validators=[
-            RegexValidator(
-                regex=r'^[\w.@+-]+\Z',
-                message='Имя пользователя содержит недопустимые символы'
-            ),
-            validators.UniqueValidator(
-                queryset=User.objects.all(),
-                message='Пользователь с таким username уже существует'
-            )
-        ]
-    )
-    email = serializers.EmailField(
-        max_length=254,
-        validators=[
-            validators.UniqueValidator(
-                queryset=User.objects.all(),
-                message='Пользователь с таким email уже существует'
-            )
-        ]
-    )
     role = serializers.ChoiceField(
         choices=ROLE_CHOICES,
         default='user',
@@ -120,13 +99,12 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
-    def update(self, instance, validated_data):
-        request = self.context.get('request')
-        if not request.user.is_admin and 'role' in validated_data:
+    def validate_username(self, username):
+        if not re.fullmatch(r'^[\w.@+-]+\Z', username):
             raise serializers.ValidationError(
-                'У вас недостаточно прав для изменения роли.'
+                'Имя пользователя содержит недопустимые символы'
             )
-        return super().update(instance, validated_data)
+        return username
 
 
 class TokenObtainSerializer(serializers.Serializer):

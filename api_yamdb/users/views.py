@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import (
     permissions,
@@ -9,7 +10,7 @@ from rest_framework import (
     decorators
 )
 
-from api.permissions import IsAdminOrSeperUserRole
+from api.permissions import IsAdmin
 from . import serializers
 
 
@@ -46,32 +47,32 @@ class UsersViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
-    permission_classes = (IsAdminOrSeperUserRole,)
+    permission_classes = (IsAdmin,)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     @decorators.action(
         detail=False,
-        methods=('get', 'patch'),
-        url_path='me',
+        methods=('GET', 'PATCH'),
+        url_path=settings.USER_SELF_PAGE,
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def me(self, request):
+    def user_page(self, request):
         """
-        Обрабатывает запросы к 'me/' — возвращает профиль пользователя,
+        Обрабатывает запросы к странице пользователя,
         позволяя просматривать и изменять его данные.
         """
         if request.method == 'GET':
-            serializer = self.get_serializer(request.user)
-            return response.Response(serializer.data)
-        elif request.method == 'PATCH':
-            serializer = self.get_serializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return response.Response(serializer.data)
+            return response.Response(self.get_serializer(request.user).data)
+        data = request.data.copy()
+        data.pop('role', None)
+        serializer = self.get_serializer(
+            request.user,
+            data=data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(serializer.data)
 
 
 class UserObtainAuthToken(views.APIView):

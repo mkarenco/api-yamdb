@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -138,7 +138,6 @@ SIMPLE_JWT = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# email section settings
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'email'
 EMAIL_HOST = os.getenv('EMAIL_HOST')
@@ -147,4 +146,11 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'
-AUTH_USER_MODEL = 'users.CustomUser'
+
+AUTH_USER_MODEL = 'users.MyUser'
+
+CODE_LENGTH = 6
+CODE_SYMBOLS = '0123456789ABCDEFG'
+USERNAME_LENGTH = 150
+EMAIL_LENGTH = 254
+USER_SELF_PAGE = 'me'

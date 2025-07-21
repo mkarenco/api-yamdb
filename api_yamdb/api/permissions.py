@@ -9,11 +9,13 @@ class IsAdminRoleOrRead(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
-                or (request.user.is_authenticated and request.user.is_admin))
+        return (
+            request.method in permissions.SAFE_METHODS
+            or (request.user.is_authenticated and request.user.is_admin)
+        )
 
 
-class IsAdminOrSeperUserRole(permissions.BasePermission):
+class IsAdmin(permissions.BasePermission):
     """Разрешает доступ, если пользователь аутентифицирован и он админ."""
 
     def has_permission(self, request, view):
@@ -21,9 +23,6 @@ class IsAdminOrSeperUserRole(permissions.BasePermission):
             request.user.is_authenticated
             and (request.user.is_admin or request.user.is_superuser)
         )
-
-    def has_object_permission(self, request, view, obj):
-        return self.has_permission(request, view)
 
 
 class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
@@ -34,9 +33,10 @@ class IsAuthorOrModeratorOrAdmin(permissions.BasePermission):
     - Редактировать / удалять: автор, модератор или админ.
     """
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user.is_authenticated
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
