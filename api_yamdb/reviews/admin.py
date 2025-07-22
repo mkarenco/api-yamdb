@@ -6,7 +6,7 @@ from . import models
 
 class DivisionAttributeAdmin(admin.ModelAdmin):
     """
-    Общий класс для для настройки админ-зоны
+    Общий класс для настройки админ-зоны
     модели-свойства объекта (внешнего ключа).
     """
 
@@ -27,8 +27,8 @@ class DivisionAttributeAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.MyUser)
-class MyUserAdmin(UserAdmin):
+@admin.register(models.User)
+class UserAdmin(UserAdmin):
     list_display = (
         'username',
         'email',

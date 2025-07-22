@@ -150,22 +150,3 @@ EMAIL_HOST_PASSWORD = os.getenv('HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'
 
 AUTH_USER_MODEL = 'reviews.MyUser'
-
-CODE_LENGTH = 6
-CODE_SYMBOLS = '0123456789ABCDEFG'
-NAME_LENGTH = 256
-USERNAME_LENGTH = 150
-EMAIL_LENGTH = 254
-SLUG_LENGTH = 50
-USER_SELF_PAGE = 'me'
-MIN_SCORE = 1
-MAX_SCORE = 10
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-ROLE_CHOICES = [
-    (USER, 'Пользователь'),
-    (ADMIN, 'Администратор'),
-    (MODERATOR, 'Модератор'),
-]
-ROLE_CHOICES_LENGTH = max(len(choice[0]) for choice in ROLE_CHOICES)

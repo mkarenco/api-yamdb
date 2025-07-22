@@ -7,7 +7,6 @@ class DivisionAttributeModel(models.Model):
     Абстрактная модель.
     Содержит поля: имени и уникальный слаг.
     """
-
     name = models.CharField(
         'Название',
         max_length=settings.NAME_LENGTH,
@@ -29,12 +28,13 @@ class DivisionAttributeModel(models.Model):
 
 class AbstractFeedback(models.Model):
     """
-    Абстрактная модель.
-    Содержит поля: текста и даты создания.
+    Абстрактная модель добавляющая общие поля
+    для представления отзыва от пользователя.
     """
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
+        related_name='feedbacks',
         help_text='Выберите автора обзора.'
     )
     text = models.TextField(
@@ -49,6 +49,7 @@ class AbstractFeedback(models.Model):
 
     class Meta:
         abstract = True
+        default_related_name = '%(model_name)ss'
         ordering = ('-pub_date',)
 
     def __str__(self):

@@ -1,9 +1,10 @@
 import re
 
-from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError as DRFValidationError
+
+USER_SELF_PAGE = 'me'
 
 
 def is_year_lte_now(year):
@@ -14,12 +15,11 @@ def is_year_lte_now(year):
 
     if year > timezone.now().year:
         raise DjangoValidationError(
-            f'Год выпуска {year} не может быть больше текущего года ('
-            f'{timezone.now().year}). '
             'Нельзя добавить произведение с годом выпуска в будущем.'
+            f'Указанный год выпуска {year}.'
         )
 
-    return True
+    return year
 
 
 def validate_reserved_username(username, raise_type='drf'):
@@ -29,9 +29,9 @@ def validate_reserved_username(username, raise_type='drf'):
     - состоит только из допустимых символов
     """
 
-    if username == settings.USER_SELF_PAGE:
+    if username == USER_SELF_PAGE:
         return _raise_validation_error(
-            f'Использовать имя {settings.USER_SELF_PAGE} нельзя.',
+            f'Использовать имя {USER_SELF_PAGE} нельзя.',
             raise_type
         )
 

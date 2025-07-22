@@ -1,34 +1,46 @@
-from django.conf import settings
+import string
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .abstract_models import AbstractFeedback, DivisionAttributeModel
-# Для тесто нужно имя "validate_username"
+# Для тестов нужно имя "validate_username"
 from .validators import (
     is_year_lte_now, validate_reserved_username as validate_username
 )
 
+MIN_SCORE = 1
+MAX_SCORE = 10
+CODE_LENGTH = 6
+CODE_SYMBOLS = string.digits
+NAME_LENGTH = 256
+USERNAME_LENGTH = 150
+EMAIL_LENGTH = 254
+SLUG_LENGTH = 50
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+ROLE_CHOICES = [
+    (USER, 'Пользователь'),
+    (ADMIN, 'Администратор'),
+    (MODERATOR, 'Модератор'),
+]
 
-class MyUser(AbstractUser):
+
+class User(AbstractUser):
     """
     Расширенная модель пользователя.
-
-    Добавлены поля:
-    - username — псевдоним пользователя.
-    - email — почта пользователя.
-    - bio — информация о пользователе.
-    - role — роль пользователя (пользователь, модератор, администратор).
-    - confirmation_code — код подтверждения для регистрации/входа.
     """
-
     username = models.CharField(
-        max_length=settings.USERNAME_LENGTH,
+        "Имя пользователя",
+        max_length=USERNAME_LENGTH,
         unique=True,
-        validators=[validate_username]
+        validators=[validate_username],
     )
     email = models.EmailField(
-        max_length=settings.EMAIL_LENGTH,
+        'Электро почта',
+        max_length=EMAIL_LENGTH,
         unique=True,
         help_text='Уникальный email пользователя.'
     )
@@ -40,14 +52,14 @@ class MyUser(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=settings.ROLE_CHOICES_LENGTH,
-        choices=settings.ROLE_CHOICES,
-        default=settings.USER,
+        max_length=max(len(role) for role, _ in ROLE_CHOICES),
+        choices=ROLE_CHOICES,
+        default=USER,
         help_text='Роль пользователя в системе.'
     )
     confirmation_code = models.CharField(
         'Код подтверждения',
-        max_length=settings.CODE_LENGTH,
+        max_length=CODE_LENGTH,
         blank=True,
         null=True,
         help_text='Код подтверждения для регистрации или авторизации.'
@@ -64,14 +76,13 @@ class MyUser(AbstractUser):
     @property
     def is_admin(self):
         return (
-            self.role == settings.ADMIN
+            self.role == ADMIN
             or self.is_staff
-            or self.is_superuser
         )
 
     @property
     def is_moderator(self):
-        return self.role == settings.MODERATOR
+        return self.role == MODERATOR
 
 
 class Category(DivisionAttributeModel):
@@ -94,13 +105,11 @@ class Title(models.Model):
     """
     Модель объекта произведения (фильма, книги и т.п.).
     Объект модели может иметь несколько жанров и только одну категорию.
-    Нельзя добавить произведение с годом выпуска в будущем.
-    К произведению можно написать обзор (комментарий).
     """
 
     name = models.CharField(
         'Название',
-        max_length=settings.NAME_LENGTH,
+        max_length=NAME_LENGTH,
         help_text='Введите название произведения.'
     )
     year = models.IntegerField(
@@ -142,7 +151,6 @@ class Review(AbstractFeedback):
     Модель обзора к произведению (Модели Title).
     Содержит автора, ссылку на произведение, текст, и дату создания.
     """
-
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -150,19 +158,18 @@ class Review(AbstractFeedback):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(settings.MIN_SCORE),
-            MaxValueValidator(settings.MAX_SCORE)
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
         ],
         help_text=(
             'Укажите оценку произведения '
-            f'от {settings.MIN_SCORE} до {settings.MAX_SCORE}.'
+            f'от {MIN_SCORE} до {MAX_SCORE}.'
         )
     )
 
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        default_related_name = 'reviews'
         constraints = [
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -176,7 +183,6 @@ class Comment(AbstractFeedback):
     Модель комментария к обзору (Модели Review).
     Содержит автора, ссылку на обзор, текст, и дату создания.
     """
-
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -186,4 +192,3 @@ class Comment(AbstractFeedback):
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        default_related_name = 'comments'
