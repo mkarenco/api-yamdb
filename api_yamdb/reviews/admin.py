@@ -1,11 +1,12 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 from . import models
 
 
 class DivisionAttributeAdmin(admin.ModelAdmin):
     """
-    Общий класс для для настройки админ-зоны
+    Общий класс для настройки админ-зоны
     модели-свойства объекта (внешнего ключа).
     """
 
@@ -23,6 +24,33 @@ class DivisionAttributeAdmin(admin.ModelAdmin):
     )
     ordering = (
         'name',
+    )
+
+
+@admin.register(models.User)
+class UserAdmin(UserAdmin):
+    list_display = (
+        'username',
+        'email',
+        'role',
+        'is_staff',
+        'is_active'
+    )
+    list_editable = (
+        'email',
+        'role'
+    )
+    search_fields = (
+        'username',
+        'email'
+    )
+    list_filter = (
+        'role',
+        'is_active',
+        'is_staff'
+    )
+    ordering = (
+        'username',
     )
 
 

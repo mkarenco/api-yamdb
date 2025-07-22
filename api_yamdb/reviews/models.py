@@ -1,25 +1,88 @@
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+import string
+
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils import timezone
 
 from .abstract_models import AbstractFeedback, DivisionAttributeModel
+# Для тестов нужно имя "validate_username"
+from .validators import (
+    is_year_lte_now, validate_reserved_username as validate_username
+)
 
-User = get_user_model()
+MIN_SCORE = 1
+MAX_SCORE = 10
+CODE_LENGTH = 6
+CODE_SYMBOLS = string.digits
+NAME_LENGTH = 256
+USERNAME_LENGTH = 150
+EMAIL_LENGTH = 254
+SLUG_LENGTH = 50
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+ROLE_CHOICES = [
+    (USER, 'Пользователь'),
+    (ADMIN, 'Администратор'),
+    (MODERATOR, 'Модератор'),
+]
 
 
-def is_year_lte_now(year):
+class User(AbstractUser):
     """
-    Метод валидации года выпуска произведения.
-    Год не может быть больше текущего.
+    Расширенная модель пользователя.
     """
-    if year > timezone.now().year:
-        raise ValidationError(
-            f'{year} год больше {timezone.now().year}. ',
-            'Нельзя добавить произведение с годом выпуска больше текущего!'
+    username = models.CharField(
+        "Имя пользователя",
+        max_length=USERNAME_LENGTH,
+        unique=True,
+        validators=[validate_username],
+    )
+    email = models.EmailField(
+        'Электро почта',
+        max_length=EMAIL_LENGTH,
+        unique=True,
+        help_text='Уникальный email пользователя.'
+    )
+    bio = models.TextField(
+        'информация о пользователе',
+        blank=True,
+        null=True,
+        help_text='Краткая информация о пользователе.'
+    )
+    role = models.CharField(
+        'Роль',
+        max_length=max(len(role) for role, _ in ROLE_CHOICES),
+        choices=ROLE_CHOICES,
+        default=USER,
+        help_text='Роль пользователя в системе.'
+    )
+    confirmation_code = models.CharField(
+        'Код подтверждения',
+        max_length=CODE_LENGTH,
+        blank=True,
+        null=True,
+        help_text='Код подтверждения для регистрации или авторизации.'
+    )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('username',)
+
+    def __str__(self):
+        return self.username[:30]
+
+    @property
+    def is_admin(self):
+        return (
+            self.role == ADMIN
+            or self.is_staff
         )
-    return True
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
 
 
 class Category(DivisionAttributeModel):
@@ -42,24 +105,23 @@ class Title(models.Model):
     """
     Модель объекта произведения (фильма, книги и т.п.).
     Объект модели может иметь несколько жанров и только одну категорию.
-    Нельзя добавить произведение с годом выпуска в будущем.
-    К проиведению можно написать обзор (комментарий).
     """
 
     name = models.CharField(
         'Название',
-        max_length=256,
-        help_text='Введите название произведения (максимум 256 символов).'
+        max_length=NAME_LENGTH,
+        help_text='Введите название произведения.'
     )
     year = models.IntegerField(
         'Год выпуска',
+        validators=[is_year_lte_now],
         help_text='Укажите год выпуска произведения. Не может быть в будущем.'
     )
     description = models.TextField(
         'Описание',
         blank=True,
         null=True,
-        help_text='Добавьте описание произведения (опционально).'
+        help_text='Добавьте описание произведения.'
     )
     genre = models.ManyToManyField(
         Genre,
@@ -83,41 +145,31 @@ class Title(models.Model):
     def __str__(self):
         return self.name[:50]
 
-    def clean_year(self):
-        year = self.cleaned_data.get('year')
-        if is_year_lte_now(year):
-            return year
-
 
 class Review(AbstractFeedback):
     """
     Модель обзора к произведению (Модели Title).
     Содержит автора, ссылку на произведение, текст, и дату создания.
     """
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        help_text='Выберите автора обзора.'
-    )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews',
         help_text='Выберите произведение, к которому относится обзор.'
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(1),
-            MaxValueValidator(10)
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
         ],
-        help_text='Укажите оценку произведения от 1 до 10.'
+        help_text=(
+            'Укажите оценку произведения '
+            f'от {MIN_SCORE} до {MAX_SCORE}.'
+        )
     )
 
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-        ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
                 fields=('title', 'author'),
@@ -131,21 +183,12 @@ class Comment(AbstractFeedback):
     Модель комментария к обзору (Модели Review).
     Содержит автора, ссылку на обзор, текст, и дату создания.
     """
-
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        help_text='Выберите автора комментария.'
-    )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comments',
         help_text='Выберите обзор, к которому относится комментарий.'
     )
 
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ('-pub_date',)
