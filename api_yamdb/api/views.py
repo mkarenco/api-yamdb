@@ -14,12 +14,12 @@ from rest_framework import (
 )
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .logic import _assign_confirmation_code, _send_confirmation_email
-from .permissions import IsAdmin
 from reviews import models
 from . import serializers
 from .filters import TitleFilter
-from .permissions import IsAdminRoleOrRead, IsAuthorOrModeratorOrAdmin
+from .logic import _assign_confirmation_code, _send_confirmation_email
+from .permissions import (IsAdmin, IsAdminRoleOrRead,
+                          IsAuthorOrModeratorOrAdminOrRead)
 from .viewsets import DivisionAttributeViewSet
 
 User = get_user_model()
@@ -149,16 +149,13 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = models.Title.objects.annotate(
         rating=Avg('reviews__score')
-    ).order_by('-rating')
+    ).order_by(*models.Title._meta.ordering)
     filter_backends = (
         DjangoFilterBackend,
-        filters.SearchFilter,
-        filters.OrderingFilter
+        filters.SearchFilter
     )
     filterset_class = TitleFilter
     search_fields = ('name', 'description')
-    ordering_fields = ('name', 'year', 'rating')
-    ordering = ('-rating', 'name', 'year')
     permission_classes = (IsAdminRoleOrRead,)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
@@ -209,7 +206,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     search_fields = ('text', 'author__username', 'title__name')
     ordering_fields = ('score', 'pub_date')
     ordering = ('-pub_date',)
-    permission_classes = (IsAuthorOrModeratorOrAdmin,)
+    permission_classes = (IsAuthorOrModeratorOrAdminOrRead,)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
@@ -242,7 +239,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     search_fields = ('text', 'author__username', 'title__name')
     ordering_fields = ('pub_date',)
     ordering = ('-pub_date',)
-    permission_classes = (IsAuthorOrModeratorOrAdmin,)
+    permission_classes = (IsAuthorOrModeratorOrAdminOrRead,)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):

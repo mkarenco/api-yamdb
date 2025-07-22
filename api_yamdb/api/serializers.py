@@ -122,8 +122,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         return TitleReadSerializer(instance, context=self.context).data
 
     def validate_year(self, year):
-        if models.is_year_lte_now(year):
-            return year
+        return models.is_year_lte_now(year)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -147,7 +146,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                 title_id=title_id, author=request.user
             ).exists():
                 raise serializers.ValidationError(
-                    'Вы уже оставили отзыв на это произведение'
+                    'Нельзя повторно оставить отзыв к произведению!'
                 )
         return data
 

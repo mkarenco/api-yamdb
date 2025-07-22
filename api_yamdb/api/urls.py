@@ -35,16 +35,20 @@ router_v1.register(
     basename='title-review-comments'
 )
 
-urlpatterns = [
+auth_urls = [
     path(
-        'v1/auth/token/',
+        'token/',
         views.obtain_auth_token,
         name='get_token'
     ),
     path(
-        'v1/auth/signup/',
+        'signup/',
         views.register_user,
         name='register'
     ),
+]
+
+urlpatterns = [
+    path('v1/auth/', include(auth_urls)),
     path('v1/', include(router_v1.urls))
 ]
