@@ -1,46 +1,27 @@
-import string
-
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from . import constants
 from .abstract_models import AbstractFeedback, DivisionAttributeModel
 # Для тестов нужно имя "validate_username"
-from .validators import (
-    is_year_lte_now, validate_reserved_username as validate_username
-)
-
-MIN_SCORE = 1
-MAX_SCORE = 10
-CODE_LENGTH = 6
-CODE_SYMBOLS = string.digits
-NAME_LENGTH = 256
-USERNAME_LENGTH = 150
-EMAIL_LENGTH = 254
-SLUG_LENGTH = 50
-USER = 'user'
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-ROLE_CHOICES = [
-    (USER, 'Пользователь'),
-    (ADMIN, 'Администратор'),
-    (MODERATOR, 'Модератор'),
-]
+from .validators import is_year_lte_now
+from .validators import validate_reserved_username as validate_username
 
 
 class User(AbstractUser):
-    """
-    Расширенная модель пользователя.
-    """
+    """Расширенная модель пользователя."""
+
     username = models.CharField(
-        "Имя пользователя",
-        max_length=USERNAME_LENGTH,
+        'Имя пользователя',
+        max_length=constants.USERNAME_LENGTH,
         unique=True,
         validators=[validate_username],
     )
     email = models.EmailField(
-        'Электро почта',
-        max_length=EMAIL_LENGTH,
+        'Электронная почта.',
+        max_length=constants.EMAIL_LENGTH,
         unique=True,
         help_text='Уникальный email пользователя.'
     )
@@ -52,14 +33,14 @@ class User(AbstractUser):
     )
     role = models.CharField(
         'Роль',
-        max_length=max(len(role) for role, _ in ROLE_CHOICES),
-        choices=ROLE_CHOICES,
-        default=USER,
+        max_length=max(len(role) for role, _ in constants.ROLE_CHOICES),
+        choices=constants.ROLE_CHOICES,
+        default=constants.USER,
         help_text='Роль пользователя в системе.'
     )
     confirmation_code = models.CharField(
         'Код подтверждения',
-        max_length=CODE_LENGTH,
+        max_length=settings.CODE_LENGTH,
         blank=True,
         null=True,
         help_text='Код подтверждения для регистрации или авторизации.'
@@ -76,13 +57,13 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return (
-            self.role == ADMIN
+            self.role == constants.ADMIN
             or self.is_staff
         )
 
     @property
     def is_moderator(self):
-        return self.role == MODERATOR
+        return self.role == constants.MODERATOR
 
 
 class Category(DivisionAttributeModel):
@@ -109,7 +90,7 @@ class Title(models.Model):
 
     name = models.CharField(
         'Название',
-        max_length=NAME_LENGTH,
+        max_length=constants.NAME_LENGTH,
         help_text='Введите название произведения.'
     )
     year = models.IntegerField(
@@ -158,12 +139,12 @@ class Review(AbstractFeedback):
     )
     score = models.PositiveSmallIntegerField(
         validators=[
-            MinValueValidator(MIN_SCORE),
-            MaxValueValidator(MAX_SCORE)
+            MinValueValidator(constants.MIN_SCORE),
+            MaxValueValidator(constants.MAX_SCORE)
         ],
         help_text=(
             'Укажите оценку произведения '
-            f'от {MIN_SCORE} до {MAX_SCORE}.'
+            f'от {constants.MIN_SCORE} до {constants.MAX_SCORE}.'
         )
     )
 

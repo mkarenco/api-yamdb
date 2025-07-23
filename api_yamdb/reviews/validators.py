@@ -1,10 +1,8 @@
 import re
 
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError as DRFValidationError
-
-USER_SELF_PAGE = 'me'
 
 
 def is_year_lte_now(year):
@@ -14,7 +12,7 @@ def is_year_lte_now(year):
     """
 
     if year > timezone.now().year:
-        raise DjangoValidationError(
+        raise ValidationError(
             'Нельзя добавить произведение с годом выпуска в будущем.'
             f'Указанный год выпуска {year}.'
         )
@@ -22,27 +20,27 @@ def is_year_lte_now(year):
     return year
 
 
-def validate_reserved_username(username, raise_type='drf'):
+def validate_reserved_username(username):
     """
     Проверяет:
     - username не совпадает с USER_SELF_PAGE
     - состоит только из допустимых символов
     """
 
-    if username == USER_SELF_PAGE:
-        return _raise_validation_error(
-            f'Использовать имя {USER_SELF_PAGE} нельзя.',
-            raise_type
+    if username == settings.USER_SELF_PAGE:
+        raise ValidationError(
+            f'Использовать имя {settings.USER_SELF_PAGE} нельзя.'
         )
 
-    if not re.fullmatch(r'^[\w.@+-]+\Z', username):
-        return _raise_validation_error(
-            'Имя пользователя содержит недопустимые символы.',
-            raise_type
-        )
+    if settings.ALLOWED_USERNAME_PATTERN.fullmatch(username):
+        return username
 
+    invalid_chars = sorted(set(
+        char for char in username
+        if not re.fullmatch(r'[\w.@+-]', char)
+    ))
 
-def _raise_validation_error(message, raise_type):
-    if raise_type == 'drf':
-        raise DRFValidationError(message)
-    raise DjangoValidationError(message)
+    invalid_display = ', '.join(f'"{char}"' for char in invalid_chars)
+    raise ValidationError(
+        f'Имя пользователя содержит недопустимые символы: {invalid_display}'
+    )

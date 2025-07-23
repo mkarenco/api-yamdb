@@ -1,14 +1,14 @@
-import secrets
+from random import choices
 
 from django.core.mail import send_mail
 
 from api_yamdb.settings import CODE_LENGTH, CODE_SYMBOLS, DEFAULT_FROM_EMAIL
 
 
-def _assign_confirmation_code():
+def _confirmation_code():
     """генерация кода подтверждения."""
 
-    return ''.join(secrets.choice(CODE_SYMBOLS) for _ in range(CODE_LENGTH))
+    return ''.join(choices(CODE_SYMBOLS, k=CODE_LENGTH))
 
 
 def _send_confirmation_email(email, confirmation_code):

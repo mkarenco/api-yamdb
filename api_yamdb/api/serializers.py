@@ -2,42 +2,33 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reviews import models
-from reviews.validators import validate_reserved_username
+from reviews import constants, models
+from .mixins import UsernameValidationMixin
 
 User = get_user_model()
 
 
-class RegisterUserSerializer(serializers.Serializer):
+class RegisterUserSerializer(serializers.Serializer, UsernameValidationMixin):
     """
     Сериализатор для запроса кода подтверждения при регистрации.
     Принимает email и username.
     """
 
     email = serializers.EmailField(
-        max_length=settings.EMAIL_LENGTH,
+        max_length=constants.EMAIL_LENGTH,
         required=True
     )
     username = serializers.CharField(
-        max_length=settings.USERNAME_LENGTH,
+        max_length=constants.USERNAME_LENGTH,
         required=True
     )
 
-    def validate_username(self, username):
-        validate_reserved_username(username, raise_type='drf')
-        return username
 
-
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, UsernameValidationMixin):
     """
     выводит список пользователей, просмотр профиля и
     обновление данных пользователя.
     """
-
-    role = serializers.ChoiceField(
-        choices=settings.ROLE_CHOICES,
-        default='user',
-    )
 
     class Meta:
         model = User
@@ -50,9 +41,16 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
-    def validate_username(self, username):
-        validate_reserved_username(username, raise_type='drf')
-        return username
+
+class TokenObtainSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=constants.USERNAME_LENGTH,
+        required=True
+    )
+    confirmation_code = serializers.CharField(
+        settings.CODE_LENGTH,
+        required=True
+    )
 
 
 class CategorySerializer(serializers.ModelSerializer):

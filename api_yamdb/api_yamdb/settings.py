@@ -1,4 +1,6 @@
 import os
+import re
+import string
 from datetime import timedelta
 from pathlib import Path
 
@@ -10,10 +12,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -149,4 +151,9 @@ EMAIL_HOST_USER = os.getenv('HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'Проект YaMDb noemail@mail.ru'
 
-AUTH_USER_MODEL = 'reviews.MyUser'
+AUTH_USER_MODEL = 'reviews.User'
+
+CODE_LENGTH = 6
+CODE_SYMBOLS = string.digits
+USER_SELF_PAGE = 'me'
+ALLOWED_USERNAME_PATTERN = re.compile(r'^[\w.@+-]+\Z')
