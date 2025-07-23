@@ -28,7 +28,6 @@ class AbstractFeedback(models.Model):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='feedbacks',
         help_text='Выберите автора обзора.'
     )
     text = models.TextField(
@@ -43,7 +42,7 @@ class AbstractFeedback(models.Model):
 
     class Meta:
         abstract = True
-        default_related_name = '%(model_name)ss'
+        default_related_name = '%(model_name)s'
         ordering = ('-pub_date',)
 
     def __str__(self):

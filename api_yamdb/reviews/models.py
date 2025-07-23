@@ -135,6 +135,7 @@ class Review(AbstractFeedback):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
+        related_name='reviews',
         help_text='Выберите произведение, к которому относится обзор.'
     )
     score = models.PositiveSmallIntegerField(
@@ -167,6 +168,7 @@ class Comment(AbstractFeedback):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
+        related_name='comments',
         help_text='Выберите обзор, к которому относится комментарий.'
     )
 

@@ -25,27 +25,20 @@ User = get_user_model()
 
 @decorators.api_view(('POST',))
 def create_user_and_send_code(request):
-    """Контроллер регистрации: всё взаимодействие с БД и отправка почты."""
+    """Функция регистрации и отправки пин-кода на почту."""
 
     serializer = serializers.RegisterUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
 
-    confirmation_code = _confirmation_code()
-    user, created = User.objects.get_or_create(
+    code = _confirmation_code()
+    user, _ = User.objects.get_or_create(
         username=username,
-        defaults={'email': email}
+        email=email
     )
-    # Место для кэша
-    # Узнай про нужно ли отправлять код зарегистрированному пользователю
-    if not created: 
-        user.confirmation_code = code
-        user.save(update_fields=['confirmation_code'])
-
-    user.confirmation_code = confirmation_code
-    user.save(update_fields=['confirmation_code'])
-
+    user.confirmation_code = code
+    user.save()
     _send_confirmation_email(user.email, user.confirmation_code)
 
     return response.Response(
@@ -55,9 +48,6 @@ def create_user_and_send_code(request):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
-    """
-    API-эндпоинт для просмотра или редактирования профиля пользователя.
-    """
 
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
@@ -92,15 +82,21 @@ class UsersViewSet(viewsets.ModelViewSet):
 
 @decorators.api_view(('POST',))
 def obtain_auth_token(request):
-    """Функция для получения кода подтверждения."""
+    """Функция для получения токена."""
 
     serializer = serializers.TokenObtainSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     confirmation_code = serializer.validated_data['confirmation_code']
 
-    user = get_object_or_404(User.objects.get(username=username))
-
+    user = get_object_or_404(User, username=username)
+    if confirmation_code != user.confirmation_code:
+        user.confirmation_code = None
+        user.save()
+        return response.Response(
+            {'message': 'Неправильный код.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     return response.Response(
         {'token': str(AccessToken.for_user(user))},
         status=status.HTTP_200_OK
