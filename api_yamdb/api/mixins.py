@@ -1,4 +1,4 @@
-from reviews.validators import validate_reserved_username
+from reviews.validators import validate_username_symbols
 
 
 class UsernameValidationMixin:
@@ -10,4 +10,4 @@ class UsernameValidationMixin:
     """
 
     def validate_username(self, username):
-        return validate_reserved_username(username)
+        return validate_username_symbols(username)

@@ -7,14 +7,14 @@ from . import constants
 from .abstract_models import AbstractFeedback, DivisionAttributeModel
 # Для тестов нужно имя "validate_username"
 from .validators import is_year_lte_now
-from .validators import validate_reserved_username as validate_username
+from .validators import validate_username_symbols as validate_username
 
 
 class User(AbstractUser):
     """Расширенная модель пользователя."""
 
     username = models.CharField(
-        'Имя пользователя',
+        'Никнейм',
         max_length=constants.USERNAME_LENGTH,
         unique=True,
         validators=[validate_username],
