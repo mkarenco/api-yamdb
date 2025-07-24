@@ -2,42 +2,25 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reviews import models
-from reviews.validators import validate_reserved_username
+from reviews import constants, models
+from .mixins import UsernameValidationMixin
 
 User = get_user_model()
 
 
-class RegisterUserSerializer(serializers.Serializer):
-    """
-    Сериализатор для запроса кода подтверждения при регистрации.
-    Принимает email и username.
-    """
+class RegisterUserSerializer(serializers.Serializer, UsernameValidationMixin):
 
     email = serializers.EmailField(
-        max_length=settings.EMAIL_LENGTH,
+        max_length=constants.EMAIL_LENGTH,
         required=True
     )
     username = serializers.CharField(
-        max_length=settings.USERNAME_LENGTH,
+        max_length=constants.USERNAME_LENGTH,
         required=True
     )
 
-    def validate_username(self, username):
-        validate_reserved_username(username, raise_type='drf')
-        return username
 
-
-class UserSerializer(serializers.ModelSerializer):
-    """
-    выводит список пользователей, просмотр профиля и
-    обновление данных пользователя.
-    """
-
-    role = serializers.ChoiceField(
-        choices=settings.ROLE_CHOICES,
-        default='user',
-    )
+class UserSerializer(serializers.ModelSerializer, UsernameValidationMixin):
 
     class Meta:
         model = User
@@ -50,13 +33,20 @@ class UserSerializer(serializers.ModelSerializer):
             'role'
         )
 
-    def validate_username(self, username):
-        validate_reserved_username(username, raise_type='drf')
-        return username
+
+class TokenObtainSerializer(serializers.Serializer):
+
+    username = serializers.CharField(
+        max_length=constants.USERNAME_LENGTH,
+        required=True
+    )
+    confirmation_code = serializers.CharField(
+        max_length=settings.CODE_LENGTH,
+        required=True
+    )
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Позволяет создавать и отображать категории произведений."""
 
     class Meta:
         model = models.Category
@@ -64,9 +54,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """
-    Позволяет создавать и отображать жанры произведений.
-    """
 
     class Meta:
         model = models.Genre
@@ -74,10 +61,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    """
-    Позволяет отображать произведения.
-    Для категории и жанров указывается slug.
-    """
 
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
@@ -98,11 +81,6 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    """
-    Позволяет создавать произведения.
-    Для категории и жанров указывается slug.
-    """
-
     genre = serializers.SlugRelatedField(
         slug_field='slug',
         queryset=models.Genre.objects.all(),
@@ -126,7 +104,6 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Позволяет создавать и отображать обзоры."""
 
     author = serializers.SlugRelatedField(
         slug_field='username',
@@ -152,9 +129,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """
-    Позволяет создавать и отображать комментарии к обзорам.
-    """
 
     author = serializers.SlugRelatedField(
         slug_field='username',

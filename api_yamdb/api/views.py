@@ -5,10 +5,10 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     decorators,
-    exceptions,
     filters,
     permissions,
     response,
+    exceptions,
     status,
     viewsets,
 )
@@ -18,47 +18,52 @@ from reviews import models
 from . import serializers
 from .filters import TitleFilter
 from .logic import _assign_confirmation_code, _send_confirmation_email
-from .permissions import (IsAdmin, IsAdminRoleOrRead,
-                          IsAuthorOrModeratorOrAdminOrRead)
+from .permissions import (
+  IsAdmin,
+  IsAdminRoleOrRead,
+  IsAuthorOrModeratorOrAdminOrRead
+)
 from .viewsets import DivisionAttributeViewSet
 
 User = get_user_model()
 
 
 @decorators.api_view(('POST',))
-def register_user(request):
-    """
-    Контроллер регистрации: всё взаимодействие с БД и отправка почты.
-    """
+def create_user_and_send_code(request):
+    """Функция регистрации и отправки пин-кода на почту."""
 
     serializer = serializers.RegisterUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
 
-    if User.objects.filter(email=email).exclude(username=username).exists():
-        raise exceptions.ValidationError(
-            {'email': 'Пользователь с таким email уже существует.'}
-        )
+    username_exists = User.objects.filter(username=username).exists()
+    email_exists = User.objects.filter(email=email).exists()
 
-    confirmation_code = _assign_confirmation_code()
-    user, created = User.objects.get_or_create(
+    if username_exists and email_exists:
+        if not User.objects.filter(
+            username=username,
+            email=email
+        ).exists():
+            raise exceptions.ValidationError({
+                'username': 'Пользователь с таким username уже существует.',
+                'email': 'Пользователь с таким email уже существует.'
+            })
+    elif username_exists:
+        raise exceptions.ValidationError({
+            'username': 'Пользователь с таким username уже существует.'
+        })
+    elif email_exists:
+        raise exceptions.ValidationError({
+            'email': 'Пользователь с таким email уже существует.'
+        })
+
+    user, _ = User.objects.get_or_create(
         username=username,
-        defaults={
-            'email': email,
-            'is_active': False,
-            'confirmation_code': confirmation_code,
-        }
+        email=email
     )
-
-    if not created:
-        if user.email != email:
-            raise exceptions.ValidationError(
-                {'email': 'Неверный email для этого username.'}
-            )
-        user.confirmation_code = confirmation_code
-        user.save(update_fields=['confirmation_code'])
-
+    user.confirmation_code = _confirmation_code()
+    user.save()
     _send_confirmation_email(user.email, user.confirmation_code)
 
     return response.Response(
@@ -68,9 +73,6 @@ def register_user(request):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
-    """
-    API-эндпоинт для просмотра или редактирования профиля пользователя.
-    """
 
     queryset = User.objects.all()
     serializer_class = serializers.UserSerializer
@@ -93,45 +95,33 @@ class UsersViewSet(viewsets.ModelViewSet):
         """
         if request.method == 'GET':
             return response.Response(self.get_serializer(request.user).data)
-        data = request.data.copy()
-        data.pop('role', None)
         serializer = self.get_serializer(
             request.user,
-            data=data,
+            data=request.data,
             partial=True
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        serializer.save(role=request.user.role)
         return response.Response(serializer.data)
 
 
 @decorators.api_view(('POST',))
 def obtain_auth_token(request):
-    """
-    Функция для получения кода подтверждения.
-    """
-    username = request.data.get('username')
-    code = request.data.get('confirmation_code')
+    """Функция для получения токена."""
 
-    if not username or not code:
-        raise exceptions.ValidationError(
-            {'detail': 'username и confirmation_code обязательны'}
+    serializer = serializers.TokenObtainSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    confirmation_code = serializer.validated_data['confirmation_code']
+
+    user = get_object_or_404(User, username=username)
+    if confirmation_code != user.confirmation_code:
+        user.confirmation_code = None
+        user.save()
+        return response.Response(
+            {'message': 'Неправильный код.'},
+            status=status.HTTP_400_BAD_REQUEST
         )
-
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        raise exceptions.NotFound(
-            {'username': 'Пользователь не найден'}
-        )
-
-    if user.confirmation_code != code:
-        raise exceptions.ValidationError(
-            {'confirmation_code': 'Неверный код подтверждения!'}
-        )
-
-    # КОД ПОДТВЕРЖДЕНИЯ ПРОВЕРЕН — удаляем его, чтобы был одноразовым
-    user.confirmation_code = ''
     return response.Response(
         {'token': str(AccessToken.for_user(user))},
         status=status.HTTP_200_OK

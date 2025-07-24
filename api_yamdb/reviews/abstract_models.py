@@ -1,21 +1,18 @@
 from django.conf import settings
 from django.db import models
 
+from . import constants
+
 
 class DivisionAttributeModel(models.Model):
-    """
-    Абстрактная модель.
-    Содержит поля: имени и уникальный слаг.
-    """
-
     name = models.CharField(
         'Название',
-        max_length=settings.NAME_LENGTH,
+        max_length=constants.NAME_LENGTH,
         help_text='Введите название категории (например, "Фильмы", "Книги").'
     )
     slug = models.SlugField(
         unique=True,
-        max_length=settings.SLUG_LENGTH,
+        max_length=constants.SLUG_LENGTH,
         help_text='Укажите уникальный slug для категории (используется в URL).'
     )
 
@@ -28,10 +25,6 @@ class DivisionAttributeModel(models.Model):
 
 
 class AbstractFeedback(models.Model):
-    """
-    Абстрактная модель.
-    Содержит поля: текста и даты создания.
-    """
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -49,6 +42,7 @@ class AbstractFeedback(models.Model):
 
     class Meta:
         abstract = True
+        default_related_name = '%(model_name)ss'
         ordering = ('-pub_date',)
 
     def __str__(self):
