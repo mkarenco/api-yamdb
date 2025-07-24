@@ -1,7 +1,6 @@
 # YaMDb
 
 **YaMDb** — API для работы с произведениями искусства (фильмы, книги, музыка и т.п.), отзывами, комментариями и пользовательскими рейтингами
-___
 
 ## Возможности:
 
@@ -16,7 +15,6 @@ ___
 + Система рейтинга на основе отзывов
 
 + Роли пользователей: **user / moderator / admin**
-___
 
 ## Стек технологий
 
@@ -27,7 +25,6 @@ ___
 + Django REST Framework
 
 + SimpleJWT
-___
 
 ## Установка и запуск проекта
 
@@ -69,7 +66,6 @@ python manage.py createsuperuser
 ```bash
 python manage.py runserver
 ```
-___
 
 ## Импорт данных из CSV
 
@@ -78,7 +74,6 @@ ___
 ```python
 python manage.py import_csv
 ```
-___
 
 ## Примеры запросов
 
@@ -91,7 +86,6 @@ ___
 | GET   | /api/v1/titles/{id}/              | Детальная информация о произведении |
 | GET   | api/v1/titles/{title_id}/reviews/ | Получение списка всех отзывов |
 | GET   | api/v1/titles/{title_id}/reviews/{review_id}/| Полуение отзыва по id |
-___
 
 ## Структура проекта
 
@@ -105,7 +99,6 @@ api_yamdb/
 ├── users/
 └── manage.py
 ```
-___
 
 ## Авторы
 
