@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -37,33 +38,22 @@ def create_user_and_send_code(request):
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
 
-    username_exists = User.objects.filter(username=username).exists()
-    email_exists = User.objects.filter(email=email).exists()
-
-    if username_exists and email_exists:
-        if not User.objects.filter(
+    try:
+        user, _ = User.objects.get_or_create(
             username=username,
             email=email
-        ).exists():
-            raise exceptions.ValidationError({
-                'username': 'Пользователь с таким username уже существует.',
-                'email': 'Пользователь с таким email уже существует.'
-            })
-    elif username_exists:
-        raise exceptions.ValidationError({
-            'username': 'Пользователь с таким username уже существует.'
-        })
-    elif email_exists:
-        raise exceptions.ValidationError({
-            'email': 'Пользователь с таким email уже существует.'
-        })
-
-    user, _ = User.objects.get_or_create(
-        username=username,
-        email=email
-    )
-    user.confirmation_code = _confirmation_code()
-    user.save()
+        )
+        user.confirmation_code = _confirmation_code()
+        user.save()
+    except IntegrityError:
+        return response.Response(
+            {
+                'message': (
+                    'Пользователь с таким email или username уже существует.'
+                )
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
     _send_confirmation_email(user.email, user.confirmation_code)
 
     return response.Response(
@@ -88,7 +78,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         url_path=settings.USER_SELF_PAGE,
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def user_page(self, request):
+    def user(self, request):
         """
         Обрабатывает запросы к странице пользователя,
         позволяя просматривать и изменять его данные.
@@ -116,11 +106,11 @@ def obtain_auth_token(request):
 
     user = get_object_or_404(User, username=username)
     if confirmation_code != user.confirmation_code:
-        user.confirmation_code = None
-        user.save()
-        return response.Response(
-            {'message': 'Неправильный код.'},
-            status=status.HTTP_400_BAD_REQUEST
+        if user.confirmation_code:
+            user.confirmation_code = ''
+            user.save()
+        raise exceptions.ValidationError(
+            {'message': 'Неверный код подтверждения.'}
         )
     return response.Response(
         {'token': str(AccessToken.for_user(user))},
