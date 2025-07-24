@@ -40,26 +40,34 @@ def create_user_and_send_code(request):
 
     try:
         user, _ = User.objects.get_or_create(
-            username=username,
-            email=email
+            email=email,
+            username=username
         )
         user.confirmation_code = _confirmation_code()
         user.save()
-    except IntegrityError:
+        _send_confirmation_email(user.email, user.confirmation_code)
         return response.Response(
-            {
-                'message': (
-                    'Пользователь с таким email или username уже существует.'
-                )
-            },
-            status=status.HTTP_400_BAD_REQUEST
+            {'username': user.username, 'email': user.email},
+            status=status.HTTP_200_OK
         )
-    _send_confirmation_email(user.email, user.confirmation_code)
-
-    return response.Response(
-        {'username': user.username, 'email': user.email},
-        status=status.HTTP_200_OK
-    )
+    except IntegrityError:
+        error_messages = {}
+        email_owner = User.objects.filter(email=email).first()
+        username_owner = User.objects.filter(username=username).first()
+        if email_owner and username_owner and email_owner != username_owner:
+            error_messages.update({
+                'username': 'Пользователь с таким username уже существует.',
+                'email': 'Пользователь с таким email уже существует.'
+            })
+        elif email_owner:
+            error_messages['email'] = (
+                'Пользователь с таким email уже существует.'
+            )
+        elif username_owner:
+            error_messages['username'] = (
+                'Пользователь с таким username уже существует.'
+            )
+        raise exceptions.ValidationError(error_messages)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -98,7 +106,6 @@ class UsersViewSet(viewsets.ModelViewSet):
 @decorators.api_view(('POST',))
 def obtain_auth_token(request):
     """Функция для получения токена."""
-
     serializer = serializers.TokenObtainSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
