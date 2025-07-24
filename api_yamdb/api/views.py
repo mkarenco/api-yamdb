@@ -5,10 +5,10 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (
     decorators,
+    exceptions,
     filters,
     permissions,
     response,
-    exceptions,
     status,
     viewsets,
 )
@@ -17,11 +17,11 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews import models
 from . import serializers
 from .filters import TitleFilter
-from .logic import _assign_confirmation_code, _send_confirmation_email
+from .logic import _confirmation_code, _send_confirmation_email
 from .permissions import (
-  IsAdmin,
-  IsAdminRoleOrRead,
-  IsAuthorOrModeratorOrAdminOrRead
+    IsAdmin,
+    IsAdminRoleOrRead,
+    IsAuthorOrModeratorOrAdminOrRead
 )
 from .viewsets import DivisionAttributeViewSet
 
