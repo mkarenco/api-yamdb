@@ -8,6 +8,7 @@ from rest_framework import (
     filters,
     permissions,
     response,
+    exceptions,
     status,
     viewsets,
 )
@@ -32,12 +33,32 @@ def create_user_and_send_code(request):
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
 
-    code = _confirmation_code()
+    username_exists = User.objects.filter(username=username).exists()
+    email_exists = User.objects.filter(email=email).exists()
+
+    if username_exists and email_exists:
+        if not User.objects.filter(
+            username=username,
+            email=email
+        ).exists():
+            raise exceptions.ValidationError({
+                'username': 'Пользователь с таким username уже существует.',
+                'email': 'Пользователь с таким email уже существует.'
+            })
+    elif username_exists:
+        raise exceptions.ValidationError({
+            'username': 'Пользователь с таким username уже существует.'
+        })
+    elif email_exists:
+        raise exceptions.ValidationError({
+            'email': 'Пользователь с таким email уже существует.'
+        })
+
     user, _ = User.objects.get_or_create(
         username=username,
         email=email
     )
-    user.confirmation_code = code
+    user.confirmation_code = _confirmation_code()
     user.save()
     _send_confirmation_email(user.email, user.confirmation_code)
 

@@ -42,7 +42,7 @@ class AbstractFeedback(models.Model):
 
     class Meta:
         abstract = True
-        default_related_name = '%(model_name)s'
+        default_related_name = '%(model_name)ss'
         ordering = ('-pub_date',)
 
     def __str__(self):
