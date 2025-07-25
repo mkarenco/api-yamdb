@@ -32,42 +32,30 @@ User = get_user_model()
 @decorators.api_view(('POST',))
 def create_user_and_send_code(request):
     """Функция регистрации и отправки пин-кода на почту."""
-
     serializer = serializers.RegisterUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data['email']
     username = serializer.validated_data['username']
-
     try:
         user, _ = User.objects.get_or_create(
             email=email,
             username=username
         )
-        user.confirmation_code = _confirmation_code()
-        user.save()
-        _send_confirmation_email(user.email, user.confirmation_code)
-        return response.Response(
-            {'username': user.username, 'email': user.email},
-            status=status.HTTP_200_OK
-        )
     except IntegrityError:
-        error_messages = {}
-        email_owner = User.objects.filter(email=email).first()
-        username_owner = User.objects.filter(username=username).first()
-        if email_owner and username_owner and email_owner != username_owner:
-            error_messages.update({
-                'username': 'Пользователь с таким username уже существует.',
-                'email': 'Пользователь с таким email уже существует.'
-            })
-        elif email_owner:
-            error_messages['email'] = (
+        raise exceptions.ValidationError({
+            'message': (
+                'Пользователь с таким username уже существует.'
+                if User.objects.filter(username=username).exists() else
                 'Пользователь с таким email уже существует.'
             )
-        elif username_owner:
-            error_messages['username'] = (
-                'Пользователь с таким username уже существует.'
-            )
-        raise exceptions.ValidationError(error_messages)
+        })
+    user.confirmation_code = _confirmation_code()
+    user.save()
+    _send_confirmation_email(user.email, user.confirmation_code)
+    return response.Response(
+        {'username': user.username, 'email': user.email},
+        status=status.HTTP_200_OK
+    )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -110,18 +98,20 @@ def obtain_auth_token(request):
     serializer.is_valid(raise_exception=True)
     username = serializer.validated_data['username']
     confirmation_code = serializer.validated_data['confirmation_code']
-
     user = get_object_or_404(User, username=username)
-    if confirmation_code != user.confirmation_code:
-        if user.confirmation_code:
-            user.confirmation_code = ''
-            user.save()
-        raise exceptions.ValidationError(
-            {'message': 'Неверный код подтверждения.'}
+    if (
+        confirmation_code == user.confirmation_code
+        and user.confirmation_code != settings.NEEDS_CONFIRMATION_CODE
+    ):
+        return response.Response(
+            {'token': str(AccessToken.for_user(user))},
+            status=status.HTTP_200_OK
         )
-    return response.Response(
-        {'token': str(AccessToken.for_user(user))},
-        status=status.HTTP_200_OK
+    if user.confirmation_code != settings.NEEDS_CONFIRMATION_CODE:
+        user.confirmation_code = settings.NEEDS_CONFIRMATION_CODE
+        user.save()
+    raise exceptions.ValidationError(
+        {'message': 'Неверный код подтверждения.'}
     )
 
 

@@ -33,13 +33,10 @@ def validate_username_symbols(username):
             f'Использовать имя {settings.USER_SELF_PAGE} нельзя.'
         )
 
-    invalid_chars = sorted(set(
-        re.findall(r'[^\w.@+-]', username)
-    ))
-    if not invalid_chars:
-        return username
-
-    invalid_display = ', '.join(f'<{char}>' for char in invalid_chars)
-    raise ValidationError(
-        f'Имя пользователя содержит недопустимые символы: {invalid_display}'
-    )
+    if invalid_chars := re.findall(r'[^\w.@+-]', username):
+        raise ValidationError(
+            f'Имя пользователя содержит недопустимые символы: {
+                ''.join(set(invalid_chars))
+            }'
+        )
+    return username
